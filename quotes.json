@@ -1,12 +1,70 @@
 {
   "quotes": [
-    {"text": "What if you died today?"},
-    {"text": "How are you today?"},
-    {"text": "Remember that you're making memories right now"},
-    {"text": "This is a moment in your life"},
-    {"text": "Do you like where you're going?"},
-    {"text": "Your nose is in front of your eyes right now.\nWhat else are you unconsciously ignoring?"},
-    {"text": "Why are you here?"},
-    {"text": "If this was a dream, would you know?"}
+    {
+      "text": "Take a breath"
+    },
+    {
+      "text": "How are you today?"
+    },
+    {
+      "text": "What if you died today?"
+    },
+    {
+      "text": "Remember that you're making memories right now"
+    },
+    {
+      "text": "This is a moment in your life"
+    },
+    {
+      "text": "Do you like where this is going?"
+    },
+    {
+      "text": "Notice your nose.\nWhat else are you ignoring?"
+    },
+    {
+      "text": "Why are you here?"
+    },
+    {
+      "text": "If this was a dream, would you know?"
+    },
+    {
+      "text": "Are you conscious of your breath?"
+    },
+    {
+      "text": "A moment of calm"
+    },
+    {
+      "text": "The rest of your life starts now"
+    },
+    {
+      "text": "What's in-between thoughts?"
+    },
+    {
+      "text": "May this brighten your life"
+    },
+    {
+      "text": "The moment is you"
+    },
+    {
+      "text": "The internal compass is the only one you can rely on"
+    },
+    {
+      "text": "You are reading these words right now"
+    },
+    {
+      "text": "The reality of the situation is subjective"
+    },
+    {
+      "text": "Take a moment"
+    },
+    {
+      "text": "This phone is temporary"
+    },
+    {
+      "text": "We are connected through these words"
+    },
+    {
+      "text": "Are you dreaming?"
+    }
   ]
 }
