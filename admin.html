@@ -730,8 +730,11 @@
     // Add
     function addSingleQuote() {
       const input = document.getElementById('newQuoteInput');
-      const text = input.value.trim();
+      let text = input.value.trim();
       if (!text) return;
+
+      // Convert literal \n to actual newlines
+      text = text.replace(/\\n/g, '\n');
 
       quotes.push(text);
       input.value = '';
@@ -747,7 +750,8 @@
 
     function addBatchQuotes() {
       const input = document.getElementById('batchInput');
-      const lines = input.value.split('\n').map(l => l.trim()).filter(l => l);
+      // Convert literal \n to actual newlines, then split by real newlines
+      const lines = input.value.split('\n').map(l => l.trim().replace(/\\n/g, '\n')).filter(l => l);
       if (lines.length === 0) return;
 
       quotes.push(...lines);
