@@ -1,0 +1,47 @@
+# Deploy admin.html to GitHub Pages
+# Only runs when admin.html changes (not on quotes.json updates)
+
+name: Deploy to Pages
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - 'admin.html'
+      - '.github/workflows/pages.yml'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+
+# Sets permissions for GITHUB_TOKEN
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one deployment at a time
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
