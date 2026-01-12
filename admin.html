@@ -465,7 +465,7 @@
 <body>
   <header>
     <div class="header-row">
-      <h1>📿 Quotes Admin v0.4</h1>
+      <h1>📿 Quotes Admin v0.5</h1>
       <span id="status" class="status">Not Connected</span>
     </div>
   </header>
@@ -783,32 +783,45 @@
       closeDeleteModal();
     }
 
-    // Drag and drop
+    // Drag and drop with live reorder
     function handleDragStart(e) {
       draggedIndex = parseInt(e.currentTarget.dataset.index);
       e.currentTarget.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
+      // Needed for Firefox
+      e.dataTransfer.setData('text/plain', draggedIndex);
     }
 
     function handleDragOver(e) {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
+
+      const targetItem = e.currentTarget;
+      const targetIndex = parseInt(targetItem.dataset.index);
+
+      // Live reorder: swap positions as we drag over items
+      if (draggedIndex !== -1 && draggedIndex !== targetIndex) {
+        const [moved] = quotes.splice(draggedIndex, 1);
+        quotes.splice(targetIndex, 0, moved);
+        draggedIndex = targetIndex; // Update to new position
+        renderQuotes();
+        // Re-mark the dragging item
+        document.querySelector(`[data-index="${draggedIndex}"]`)?.classList.add('dragging');
+      }
     }
 
     function handleDrop(e) {
       e.preventDefault();
-      const dropIndex = parseInt(e.currentTarget.dataset.index);
-      if (draggedIndex !== dropIndex) {
-        const [moved] = quotes.splice(draggedIndex, 1);
-        quotes.splice(dropIndex, 0, moved);
-        renderQuotes();
-        updateTodayQuote();
-        showToast('Quote moved');
-      }
+      // Reorder already happened in dragOver, just finalize
+      updateTodayQuote();
+      updateChangesState();
     }
 
     function handleDragEnd(e) {
-      e.currentTarget.classList.remove('dragging');
+      document.querySelectorAll('.quote-item').forEach(el => el.classList.remove('dragging'));
+      if (draggedIndex !== -1) {
+        showToast('Quote moved');
+      }
       draggedIndex = -1;
     }
 
