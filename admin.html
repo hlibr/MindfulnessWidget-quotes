@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Mindfulness Quotes Admin</title>
+  <style>
+    :root {
+      --bg: #1a1a2e;
+      --surface: #16213e;
+      --surface-hover: #1f3460;
+      --accent: #e94560;
+      --accent-dim: #c73e54;
+      --text: #eaeaea;
+      --text-dim: #888;
+      --success: #4ade80;
+      --warning: #fbbf24;
+      --danger: #ef4444;
+      --radius: 12px;
+    }
+    
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+    
+    header {
+      background: var(--surface);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    h1 {
+      font-size: 20px;
+      margin: 0;
+      font-weight: 600;
+    }
+    
+    .status {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: var(--danger);
+    }
+    
+    .status.connected {
+      background: var(--success);
+      color: #000;
+    }
+    
+    .container {
+      padding: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    /* Auth Section */
+    .auth-section {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .auth-section h2 {
+      margin: 0 0 16px 0;
+      font-size: 16px;
+    }
+    
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    input[type="password"], input[type="text"], textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 16px;
+      outline: none;
+    }
+    
+    input:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+    
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+    
+    .checkbox-row input {
+      width: 20px;
+      height: 20px;
+    }
+    
+    button {
+      padding: 14px 24px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-height: 48px;
+    }
+    
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      width: 100%;
+    }
+    
+    .btn-primary:active {
+      background: var(--accent-dim);
+      transform: scale(0.98);
+    }
+    
+    .btn-secondary {
+      background: var(--surface-hover);
+      color: var(--text);
+    }
+    
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+    
+    .btn-success {
+      background: var(--success);
+      color: #000;
+    }
+    
+    .btn-small {
+      padding: 8px 16px;
+      font-size: 14px;
+      min-height: 36px;
+    }
+    
+    /* Today's Quote */
+    .today-section {
+      background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 100%);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .today-section h2 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+    
+    .today-quote {
+      font-size: 18px;
+      line-height: 1.5;
+      margin: 0;
+      white-space: pre-wrap;
+    }
+    
+    .today-meta {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-top: 12px;
+    }
+    
+    /* Quote List */
+    .quotes-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .quotes-header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+    
+    .quote-count {
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+    
+    .quote-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .quote-item {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      position: relative;
+      transition: background 0.2s;
+    }
+    
+    .quote-item:active {
+      background: var(--surface-hover);
+    }
+    
+    .quote-item.today {
+      border: 2px solid var(--accent);
+    }
+    
+    .quote-item.dragging {
+      opacity: 0.5;
+      background: var(--surface-hover);
+    }
+    
+    .quote-index {
+      font-size: 12px;
+      color: var(--text-dim);
+      min-width: 24px;
+      padding-top: 2px;
+    }
+    
+    .quote-content {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .quote-text {
+      font-size: 15px;
+      line-height: 1.4;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+    
+    .quote-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    
+    .quote-actions button {
+      padding: 6px 12px;
+      font-size: 13px;
+      min-height: 32px;
+    }
+    
+    .drag-handle {
+      cursor: grab;
+      padding: 4px;
+      color: var(--text-dim);
+      font-size: 18px;
+      touch-action: none;
+    }
+    
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+    
+    /* Edit Mode */
+    .quote-edit {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .quote-item.editing .quote-display {
+      display: none;
+    }
+    
+    .quote-item.editing .quote-edit {
+      display: flex;
+    }
+    
+    .quote-edit textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    
+    .edit-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    /* Add Quote Section */
+    .add-section {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .add-section h3 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+    }
+    
+    .add-single {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    
+    .add-single input {
+      flex: 1;
+    }
+    
+    .batch-area textarea {
+      min-height: 120px;
+      margin-bottom: 10px;
+    }
+    
+    .batch-hint {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+    
+    /* Bottom Actions */
+    .bottom-actions {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      padding: 12px 16px;
+      display: flex;
+      gap: 12px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      z-index: 100;
+    }
+    
+    .bottom-actions button {
+      flex: 1;
+    }
+    
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .modal-overlay.active {
+      display: flex;
+    }
+    
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+    }
+    
+    .modal h3 {
+      margin: 0 0 16px 0;
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    
+    .modal-actions button {
+      flex: 1;
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
+      color: var(--text);
+      padding: 12px 24px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      z-index: 300;
+      opacity: 0;
+      transition: opacity 0.3s;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .toast.show {
+      opacity: 1;
+    }
+    
+    .toast.success {
+      border-color: var(--success);
+    }
+    
+    .toast.error {
+      border-color: var(--danger);
+    }
+    
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-dim);
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    /* Changes indicator */
+    .changes-badge {
+      background: var(--warning);
+      color: #000;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-row">
+      <h1>📿 Quotes Admin</h1>
+      <span id="status" class="status">Not Connected</span>
+    </div>
+  </header>
+  
+  <div class="container">
+    <!-- Auth Section -->
+    <div id="authSection" class="auth-section">
+      <h2>🔐 Connect to GitHub</h2>
+      <div class="input-group">
+        <input type="password" id="patInput" placeholder="GitHub Personal Access Token">
+        <label class="checkbox-row">
+          <input type="checkbox" id="rememberPat" checked>
+          Remember on this device
+        </label>
+        <button class="btn-primary" onclick="connect()">Connect</button>
+      </div>
+      <p style="font-size: 12px; color: var(--text-dim); margin-top: 12px;">
+        Create a token at GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens
+        <br>Needs: Contents (Read and write) for hlibr/MindfulnessWidget-quotes
+      </p>
+    </div>
+    
+    <!-- Main Content (hidden until connected) -->
+    <div id="mainContent" class="hidden">
+      
+      <!-- Today's Quote -->
+      <div class="today-section">
+        <h2>✨ TODAY'S QUOTE</h2>
+        <p id="todayQuote" class="today-quote">Loading...</p>
+        <p id="todayMeta" class="today-meta"></p>
+      </div>
+      
+      <!-- Add Quote Section -->
+      <div class="add-section">
+        <h3>➕ Add Quotes</h3>
+        <div class="add-single">
+          <input type="text" id="newQuoteInput" placeholder="New quote...">
+          <button class="btn-primary btn-small" onclick="addSingleQuote()">Add</button>
+        </div>
+        <details>
+          <summary style="color: var(--text-dim); cursor: pointer; margin-bottom: 10px;">Batch Add</summary>
+          <div class="batch-area">
+            <p class="batch-hint">One quote per line</p>
+            <textarea id="batchInput" placeholder="Quote 1&#10;Quote 2&#10;Quote 3"></textarea>
+            <button class="btn-secondary" onclick="addBatchQuotes()">Add All</button>
+          </div>
+        </details>
+      </div>
+      
+      <!-- Quote List -->
+      <div class="quotes-header">
+        <h2>All Quotes <span id="quoteCount" class="quote-count"></span></h2>
+        <span id="changesBadge" class="changes-badge hidden">Unsaved</span>
+      </div>
+      
+      <div id="quoteList" class="quote-list">
+        <div class="loading">Loading quotes...</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Bottom Actions -->
+  <div id="bottomActions" class="bottom-actions hidden">
+    <button class="btn-secondary" onclick="discardChanges()">Discard</button>
+    <button class="btn-success" onclick="pushChanges()">Push to GitHub</button>
+  </div>
+  
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal-overlay">
+    <div class="modal">
+      <h3>Delete Quote?</h3>
+      <p id="deleteQuoteText" style="color: var(--text-dim);"></p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn-danger" onclick="confirmDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // Config
+    const REPO_OWNER = 'hlibr';
+    const REPO_NAME = 'MindfulnessWidget-quotes';
+    const FILE_PATH = 'quotes.json';
+    const EPOCH_DATE = new Date(2025, 11, 27); // Dec 27, 2025
+    
+    // State
+    let quotes = [];
+    let originalQuotes = [];
+    let pat = '';
+    let fileSha = '';
+    let hasChanges = false;
+    let deleteIndex = -1;
+    let draggedIndex = -1;
+    
+    // DOM Elements
+    const authSection = document.getElementById('authSection');
+    const mainContent = document.getElementById('mainContent');
+    const status = document.getElementById('status');
+    const quoteList = document.getElementById('quoteList');
+    const todayQuote = document.getElementById('todayQuote');
+    const todayMeta = document.getElementById('todayMeta');
+    const quoteCount = document.getElementById('quoteCount');
+    const changesBadge = document.getElementById('changesBadge');
+    const bottomActions = document.getElementById('bottomActions');
+    const toast = document.getElementById('toast');
+    
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedPat = localStorage.getItem('github_pat');
+      if (savedPat) {
+        document.getElementById('patInput').value = savedPat;
+        connect();
+      }
+    });
+    
+    // Auth
+    async function connect() {
+      pat = document.getElementById('patInput').value.trim();
+      if (!pat) {
+        showToast('Please enter a token', 'error');
+        return;
+      }
+      
+      try {
+        // Test auth
+        const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`, {
+          headers: { Authorization: `token ${pat}` }
+        });
+        
+        if (!res.ok) throw new Error('Invalid token or no access');
+        
+        // Save if checked
+        if (document.getElementById('rememberPat').checked) {
+          localStorage.setItem('github_pat', pat);
+        }
+        
+        status.textContent = 'Connected';
+        status.classList.add('connected');
+        authSection.classList.add('hidden');
+        mainContent.classList.remove('hidden');
+        
+        await loadQuotes();
+      } catch (e) {
+        showToast('Connection failed: ' + e.message, 'error');
+      }
+    }
+    
+    // Load quotes from GitHub
+    async function loadQuotes() {
+      try {
+        const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
+          headers: { Authorization: `token ${pat}` }
+        });
+        
+        if (!res.ok) throw new Error('Failed to load');
+        
+        const data = await res.json();
+        fileSha = data.sha;
+        
+        const content = atob(data.content);
+        const json = JSON.parse(content);
+        quotes = json.quotes.map(q => q.text);
+        originalQuotes = [...quotes];
+        
+        renderQuotes();
+        updateTodayQuote();
+      } catch (e) {
+        quoteList.innerHTML = `<div class="loading" style="color: var(--danger);">Error: ${e.message}</div>`;
+      }
+    }
+    
+    // Render quote list
+    function renderQuotes() {
+      quoteCount.textContent = `(${quotes.length})`;
+      
+      const todayIndex = getTodayIndex();
+      
+      quoteList.innerHTML = quotes.map((text, i) => `
+        <div class="quote-item ${i === todayIndex ? 'today' : ''}" data-index="${i}" draggable="true">
+          <span class="drag-handle">⋮⋮</span>
+          <span class="quote-index">#${i + 1}</span>
+          <div class="quote-content">
+            <div class="quote-display">
+              <div class="quote-text">${escapeHtml(text)}</div>
+              <div class="quote-actions">
+                <button class="btn-secondary btn-small" onclick="editQuote(${i})">Edit</button>
+                <button class="btn-danger btn-small" onclick="deleteQuote(${i})">Delete</button>
+              </div>
+            </div>
+            <div class="quote-edit">
+              <textarea id="edit-${i}">${escapeHtml(text)}</textarea>
+              <div class="edit-actions">
+                <button class="btn-secondary btn-small" onclick="cancelEdit(${i})">Cancel</button>
+                <button class="btn-success btn-small" onclick="saveEdit(${i})">Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      // Add drag listeners
+      document.querySelectorAll('.quote-item').forEach(item => {
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragover', handleDragOver);
+        item.addEventListener('drop', handleDrop);
+        item.addEventListener('dragend', handleDragEnd);
+        
+        // Touch events for mobile
+        const handle = item.querySelector('.drag-handle');
+        handle.addEventListener('touchstart', handleTouchStart, { passive: false });
+        handle.addEventListener('touchmove', handleTouchMove, { passive: false });
+        handle.addEventListener('touchend', handleTouchEnd);
+      });
+      
+      updateChangesState();
+    }
+    
+    // Today's quote calculation
+    function getTodayIndex() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const epoch = new Date(EPOCH_DATE);
+      epoch.setHours(0, 0, 0, 0);
+      
+      const daysSince = Math.floor((today - epoch) / (24 * 60 * 60 * 1000));
+      return ((daysSince % quotes.length) + quotes.length) % quotes.length;
+    }
+    
+    function updateTodayQuote() {
+      const index = getTodayIndex();
+      todayQuote.textContent = quotes[index] || 'No quotes';
+      todayMeta.textContent = `Quote #${index + 1} of ${quotes.length} • Day ${Math.floor((new Date() - EPOCH_DATE) / (24 * 60 * 60 * 1000))} since epoch`;
+    }
+    
+    // Edit
+    function editQuote(index) {
+      document.querySelectorAll('.quote-item').forEach(el => el.classList.remove('editing'));
+      document.querySelector(`[data-index="${index}"]`).classList.add('editing');
+      document.getElementById(`edit-${index}`).focus();
+    }
+    
+    function cancelEdit(index) {
+      document.querySelector(`[data-index="${index}"]`).classList.remove('editing');
+    }
+    
+    function saveEdit(index) {
+      const newText = document.getElementById(`edit-${index}`).value.trim();
+      if (!newText) {
+        showToast('Quote cannot be empty', 'error');
+        return;
+      }
+      quotes[index] = newText;
+      renderQuotes();
+      updateTodayQuote();
+      showToast('Quote updated');
+    }
+    
+    // Add
+    function addSingleQuote() {
+      const input = document.getElementById('newQuoteInput');
+      const text = input.value.trim();
+      if (!text) return;
+      
+      quotes.push(text);
+      input.value = '';
+      renderQuotes();
+      updateTodayQuote();
+      showToast('Quote added');
+      
+      // Scroll to bottom
+      setTimeout(() => {
+        quoteList.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+    
+    function addBatchQuotes() {
+      const input = document.getElementById('batchInput');
+      const lines = input.value.split('\n').map(l => l.trim()).filter(l => l);
+      if (lines.length === 0) return;
+      
+      quotes.push(...lines);
+      input.value = '';
+      renderQuotes();
+      updateTodayQuote();
+      showToast(`Added ${lines.length} quotes`);
+    }
+    
+    // Delete
+    function deleteQuote(index) {
+      deleteIndex = index;
+      document.getElementById('deleteQuoteText').textContent = quotes[index];
+      document.getElementById('deleteModal').classList.add('active');
+    }
+    
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').classList.remove('active');
+      deleteIndex = -1;
+    }
+    
+    function confirmDelete() {
+      if (deleteIndex >= 0) {
+        quotes.splice(deleteIndex, 1);
+        renderQuotes();
+        updateTodayQuote();
+        showToast('Quote deleted');
+      }
+      closeDeleteModal();
+    }
+    
+    // Drag and drop
+    function handleDragStart(e) {
+      draggedIndex = parseInt(e.currentTarget.dataset.index);
+      e.currentTarget.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    }
+    
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    }
+    
+    function handleDrop(e) {
+      e.preventDefault();
+      const dropIndex = parseInt(e.currentTarget.dataset.index);
+      if (draggedIndex !== dropIndex) {
+        const [moved] = quotes.splice(draggedIndex, 1);
+        quotes.splice(dropIndex, 0, moved);
+        renderQuotes();
+        updateTodayQuote();
+        showToast('Quote moved');
+      }
+    }
+    
+    function handleDragEnd(e) {
+      e.currentTarget.classList.remove('dragging');
+      draggedIndex = -1;
+    }
+    
+    // Touch drag (mobile)
+    let touchStartY = 0;
+    let touchElement = null;
+    let touchIndex = -1;
+    
+    function handleTouchStart(e) {
+      const item = e.currentTarget.closest('.quote-item');
+      touchElement = item;
+      touchIndex = parseInt(item.dataset.index);
+      touchStartY = e.touches[0].clientY;
+      item.classList.add('dragging');
+    }
+    
+    function handleTouchMove(e) {
+      if (!touchElement) return;
+      e.preventDefault();
+      
+      const touch = e.touches[0];
+      const items = document.querySelectorAll('.quote-item');
+      
+      items.forEach(item => {
+        const rect = item.getBoundingClientRect();
+        if (touch.clientY > rect.top && touch.clientY < rect.bottom) {
+          const newIndex = parseInt(item.dataset.index);
+          if (newIndex !== touchIndex) {
+            const [moved] = quotes.splice(touchIndex, 1);
+            quotes.splice(newIndex, 0, moved);
+            touchIndex = newIndex;
+            renderQuotes();
+            
+            // Re-mark the dragging item
+            document.querySelector(`[data-index="${touchIndex}"]`)?.classList.add('dragging');
+          }
+        }
+      });
+    }
+    
+    function handleTouchEnd() {
+      if (touchElement) {
+        touchElement.classList.remove('dragging');
+        updateTodayQuote();
+        showToast('Quote moved');
+      }
+      touchElement = null;
+      touchIndex = -1;
+    }
+    
+    // Changes tracking
+    function updateChangesState() {
+      hasChanges = JSON.stringify(quotes) !== JSON.stringify(originalQuotes);
+      changesBadge.classList.toggle('hidden', !hasChanges);
+      bottomActions.classList.toggle('hidden', !hasChanges);
+    }
+    
+    function discardChanges() {
+      quotes = [...originalQuotes];
+      renderQuotes();
+      updateTodayQuote();
+      showToast('Changes discarded');
+    }
+    
+    // Push to GitHub
+    async function pushChanges() {
+      const commitMessage = `Update quotes (${quotes.length} total)`;
+      
+      const content = JSON.stringify({ quotes: quotes.map(text => ({ text })) }, null, 2);
+      const encoded = btoa(unescape(encodeURIComponent(content)));
+      
+      try {
+        const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `token ${pat}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: commitMessage,
+            content: encoded,
+            sha: fileSha
+          })
+        });
+        
+        if (!res.ok) throw new Error('Push failed');
+        
+        const data = await res.json();
+        fileSha = data.content.sha;
+        originalQuotes = [...quotes];
+        updateChangesState();
+        
+        showToast('Pushed to GitHub! CDN will update shortly.', 'success');
+      } catch (e) {
+        showToast('Push failed: ' + e.message, 'error');
+      }
+    }
+    
+    // Utilities
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    function showToast(message, type = '') {
+      toast.textContent = message;
+      toast.className = 'toast show ' + type;
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+    
+    // Logout
+    function logout() {
+      localStorage.removeItem('github_pat');
+      location.reload();
+    }
+  </script>
+</body>
+</html>
