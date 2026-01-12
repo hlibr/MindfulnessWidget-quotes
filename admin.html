@@ -465,7 +465,7 @@
 <body>
   <header>
     <div class="header-row">
-      <h1>📿 Quotes Admin v0.6</h1>
+      <h1>📿 Quotes Admin v0.7</h1>
       <span id="status" class="status">Not Connected</span>
     </div>
   </header>
@@ -783,8 +783,36 @@
       closeDeleteModal();
     }
 
-    // Drag and drop with live reorder and auto-scroll
+    // Drag and drop with live reorder and continuous auto-scroll
     let scrollInterval = null;
+    let lastDragY = 0;
+
+    function startAutoScroll(y) {
+      stopAutoScroll();
+      const scrollZone = 120; // Larger zone, accounting for header/footer
+      const headerHeight = 60;
+      const footerHeight = 80;
+
+      let scrollSpeed = 0;
+      if (y < headerHeight + scrollZone) {
+        scrollSpeed = -Math.max(5, (headerHeight + scrollZone - y) / 5);
+      } else if (y > window.innerHeight - footerHeight - scrollZone) {
+        scrollSpeed = Math.max(5, (y - (window.innerHeight - footerHeight - scrollZone)) / 5);
+      }
+
+      if (scrollSpeed !== 0) {
+        scrollInterval = setInterval(() => {
+          window.scrollBy(0, scrollSpeed);
+        }, 16); // ~60fps
+      }
+    }
+
+    function stopAutoScroll() {
+      if (scrollInterval) {
+        clearInterval(scrollInterval);
+        scrollInterval = null;
+      }
+    }
 
     function handleDragStart(e) {
       draggedIndex = parseInt(e.currentTarget.dataset.index);
@@ -796,22 +824,14 @@
     function handleDragOver(e) {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
+      lastDragY = e.clientY;
 
-      // Auto-scroll when near edges
-      const scrollZone = 80;
-      const scrollSpeed = 10;
-      const y = e.clientY;
-
-      if (y < scrollZone) {
-        window.scrollBy(0, -scrollSpeed);
-      } else if (y > window.innerHeight - scrollZone) {
-        window.scrollBy(0, scrollSpeed);
-      }
+      // Continuous auto-scroll
+      startAutoScroll(e.clientY);
 
       const targetItem = e.currentTarget;
       const targetIndex = parseInt(targetItem.dataset.index);
 
-      // Live reorder: swap positions as we drag over items
       if (draggedIndex !== -1 && draggedIndex !== targetIndex) {
         const [moved] = quotes.splice(draggedIndex, 1);
         quotes.splice(targetIndex, 0, moved);
@@ -823,28 +843,27 @@
 
     function handleDrop(e) {
       e.preventDefault();
+      stopAutoScroll();
       updateTodayQuote();
       updateChangesState();
     }
 
     function handleDragEnd(e) {
+      stopAutoScroll();
       document.querySelectorAll('.quote-item').forEach(el => el.classList.remove('dragging'));
       draggedIndex = -1;
     }
 
-    // Touch drag (mobile) with debounce and auto-scroll
-    let touchStartY = 0;
+    // Touch drag (mobile) with hysteresis and continuous auto-scroll
     let touchElement = null;
     let touchIndex = -1;
-    let lastTouchSwap = 0;
-    const TOUCH_DEBOUNCE = 150; // ms between swaps
+    let lastSwappedToIndex = -1; // Track last swap target to prevent flip-flop
 
     function handleTouchStart(e) {
       const item = e.currentTarget.closest('.quote-item');
       touchElement = item;
       touchIndex = parseInt(item.dataset.index);
-      touchStartY = e.touches[0].clientY;
-      lastTouchSwap = Date.now();
+      lastSwappedToIndex = -1;
       item.classList.add('dragging');
     }
 
@@ -855,47 +874,43 @@
       const touch = e.touches[0];
       const y = touch.clientY;
 
-      // Auto-scroll when near edges
-      const scrollZone = 80;
-      const scrollSpeed = 8;
-      if (y < scrollZone) {
-        window.scrollBy(0, -scrollSpeed);
-      } else if (y > window.innerHeight - scrollZone) {
-        window.scrollBy(0, scrollSpeed);
-      }
-
-      // Debounce: prevent rapid swapping
-      const now = Date.now();
-      if (now - lastTouchSwap < TOUCH_DEBOUNCE) return;
+      // Continuous auto-scroll
+      startAutoScroll(y);
 
       const items = document.querySelectorAll('.quote-item');
       for (const item of items) {
         const rect = item.getBoundingClientRect();
-        // Use center of item for more stable detection
-        const itemCenter = rect.top + rect.height / 2;
-        if (Math.abs(y - itemCenter) < rect.height / 2) {
-          const newIndex = parseInt(item.dataset.index);
-          if (newIndex !== touchIndex) {
-            const [moved] = quotes.splice(touchIndex, 1);
-            quotes.splice(newIndex, 0, moved);
-            touchIndex = newIndex;
-            lastTouchSwap = now;
-            renderQuotes();
-            document.querySelector(`[data-index="${touchIndex}"]`)?.classList.add('dragging');
-            break;
-          }
+        const newIndex = parseInt(item.dataset.index);
+
+        // Hysteresis: only swap if we're solidly in the middle 60% of the target
+        const hysteresisMargin = rect.height * 0.2;
+        const isInTarget = y > rect.top + hysteresisMargin && y < rect.bottom - hysteresisMargin;
+
+        // Prevent immediate flip-flop: don't swap back to the index we just came from
+        const notFlipFlop = newIndex !== lastSwappedToIndex || Math.abs(newIndex - touchIndex) > 1;
+
+        if (isInTarget && newIndex !== touchIndex && notFlipFlop) {
+          lastSwappedToIndex = touchIndex;
+          const [moved] = quotes.splice(touchIndex, 1);
+          quotes.splice(newIndex, 0, moved);
+          touchIndex = newIndex;
+          renderQuotes();
+          document.querySelector(`[data-index="${touchIndex}"]`)?.classList.add('dragging');
+          break;
         }
       }
     }
 
     function handleTouchEnd() {
+      stopAutoScroll();
       if (touchElement) {
-        touchElement.classList.remove('dragging');
+        document.querySelectorAll('.quote-item').forEach(el => el.classList.remove('dragging'));
         updateTodayQuote();
         updateChangesState();
       }
       touchElement = null;
       touchIndex = -1;
+      lastSwappedToIndex = -1;
     }
 
     // Changes tracking
