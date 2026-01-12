@@ -465,7 +465,7 @@
 <body>
   <header>
     <div class="header-row">
-      <h1>📿 Quotes Admin v0.75</h1>
+      <h1>📿 Quotes Admin v0.8</h1>
       <span id="status" class="status">Not Connected</span>
     </div>
   </header>
@@ -523,6 +523,14 @@
 
       <div id="quoteList" class="quote-list">
         <div class="loading">Loading quotes...</div>
+      </div>
+
+      <!-- Bottom Add Quote -->
+      <div class="add-section" style="margin-top: 16px;">
+        <div class="add-single">
+          <input type="text" id="bottomQuoteInput" placeholder="Add quote at end...">
+          <button class="btn-primary btn-small" onclick="addBottomQuote()">Add</button>
+        </div>
       </div>
     </div>
   </div>
@@ -761,6 +769,21 @@
       showToast(`Added ${lines.length} quotes`);
     }
 
+    function addBottomQuote() {
+      const input = document.getElementById('bottomQuoteInput');
+      let text = input.value.trim();
+      if (!text) return;
+
+      // Convert literal \n to actual newlines
+      text = text.replace(/\\n/g, '\n');
+
+      quotes.push(text);
+      input.value = '';
+      renderQuotes();
+      updateTodayQuote();
+      showToast('Quote added');
+    }
+
     // Delete
     function deleteQuote(index) {
       deleteIndex = index;
@@ -953,6 +976,7 @@
         const data = await res.json();
         fileSha = data.content.sha;
         originalQuotes = [...quotes];
+        renderQuotes(); // Re-render to fix event handlers
         updateChangesState();
 
         showToast('Pushed to GitHub! CDN will update shortly.', 'success');
