@@ -465,7 +465,7 @@
 <body>
   <header>
     <div class="header-row">
-      <h1>📿 Quotes Admin v0.5</h1>
+      <h1>📿 Quotes Admin v0.6</h1>
       <span id="status" class="status">Not Connected</span>
     </div>
   </header>
@@ -783,18 +783,30 @@
       closeDeleteModal();
     }
 
-    // Drag and drop with live reorder
+    // Drag and drop with live reorder and auto-scroll
+    let scrollInterval = null;
+
     function handleDragStart(e) {
       draggedIndex = parseInt(e.currentTarget.dataset.index);
       e.currentTarget.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
-      // Needed for Firefox
       e.dataTransfer.setData('text/plain', draggedIndex);
     }
 
     function handleDragOver(e) {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
+
+      // Auto-scroll when near edges
+      const scrollZone = 80;
+      const scrollSpeed = 10;
+      const y = e.clientY;
+
+      if (y < scrollZone) {
+        window.scrollBy(0, -scrollSpeed);
+      } else if (y > window.innerHeight - scrollZone) {
+        window.scrollBy(0, scrollSpeed);
+      }
 
       const targetItem = e.currentTarget;
       const targetIndex = parseInt(targetItem.dataset.index);
@@ -803,38 +815,36 @@
       if (draggedIndex !== -1 && draggedIndex !== targetIndex) {
         const [moved] = quotes.splice(draggedIndex, 1);
         quotes.splice(targetIndex, 0, moved);
-        draggedIndex = targetIndex; // Update to new position
+        draggedIndex = targetIndex;
         renderQuotes();
-        // Re-mark the dragging item
         document.querySelector(`[data-index="${draggedIndex}"]`)?.classList.add('dragging');
       }
     }
 
     function handleDrop(e) {
       e.preventDefault();
-      // Reorder already happened in dragOver, just finalize
       updateTodayQuote();
       updateChangesState();
     }
 
     function handleDragEnd(e) {
       document.querySelectorAll('.quote-item').forEach(el => el.classList.remove('dragging'));
-      if (draggedIndex !== -1) {
-        showToast('Quote moved');
-      }
       draggedIndex = -1;
     }
 
-    // Touch drag (mobile)
+    // Touch drag (mobile) with debounce and auto-scroll
     let touchStartY = 0;
     let touchElement = null;
     let touchIndex = -1;
+    let lastTouchSwap = 0;
+    const TOUCH_DEBOUNCE = 150; // ms between swaps
 
     function handleTouchStart(e) {
       const item = e.currentTarget.closest('.quote-item');
       touchElement = item;
       touchIndex = parseInt(item.dataset.index);
       touchStartY = e.touches[0].clientY;
+      lastTouchSwap = Date.now();
       item.classList.add('dragging');
     }
 
@@ -843,30 +853,46 @@
       e.preventDefault();
 
       const touch = e.touches[0];
-      const items = document.querySelectorAll('.quote-item');
+      const y = touch.clientY;
 
-      items.forEach(item => {
+      // Auto-scroll when near edges
+      const scrollZone = 80;
+      const scrollSpeed = 8;
+      if (y < scrollZone) {
+        window.scrollBy(0, -scrollSpeed);
+      } else if (y > window.innerHeight - scrollZone) {
+        window.scrollBy(0, scrollSpeed);
+      }
+
+      // Debounce: prevent rapid swapping
+      const now = Date.now();
+      if (now - lastTouchSwap < TOUCH_DEBOUNCE) return;
+
+      const items = document.querySelectorAll('.quote-item');
+      for (const item of items) {
         const rect = item.getBoundingClientRect();
-        if (touch.clientY > rect.top && touch.clientY < rect.bottom) {
+        // Use center of item for more stable detection
+        const itemCenter = rect.top + rect.height / 2;
+        if (Math.abs(y - itemCenter) < rect.height / 2) {
           const newIndex = parseInt(item.dataset.index);
           if (newIndex !== touchIndex) {
             const [moved] = quotes.splice(touchIndex, 1);
             quotes.splice(newIndex, 0, moved);
             touchIndex = newIndex;
+            lastTouchSwap = now;
             renderQuotes();
-
-            // Re-mark the dragging item
             document.querySelector(`[data-index="${touchIndex}"]`)?.classList.add('dragging');
+            break;
           }
         }
-      });
+      }
     }
 
     function handleTouchEnd() {
       if (touchElement) {
         touchElement.classList.remove('dragging');
         updateTodayQuote();
-        showToast('Quote moved');
+        updateChangesState();
       }
       touchElement = null;
       touchIndex = -1;
