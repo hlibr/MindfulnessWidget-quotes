@@ -528,7 +528,7 @@
 <body>
   <header>
     <div class="header-row">
-      <h1>📿 Quotes Admin v1.0</h1>
+      <h1>📿 Quotes Admin v0.9</h1>
       <span id="status" class="status">Not Connected</span>
     </div>
   </header>
@@ -563,11 +563,12 @@
 
       <!-- Quote Timeline -->
       <div class="timeline-section">
-        <h3>📅 Quote Timeline</h3>
+        <h3>📅 Quote Timeline <span id="cycleInfo" style="font-weight: normal; color: var(--text-dim);"></span></h3>
         <div id="timelineList" class="timeline-list"></div>
         <div class="timeline-nav">
-          <button class="btn-secondary btn-small" onclick="loadEarlier()">◀ Earlier</button>
-          <button class="btn-secondary btn-small" onclick="loadLater()">Later ▶</button>
+          <button class="btn-secondary btn-small" onclick="prevCycle()">◀ Prev Cycle</button>
+          <button class="btn-primary btn-small" onclick="goToToday()">Today</button>
+          <button class="btn-secondary btn-small" onclick="nextCycle()">Next Cycle ▶</button>
         </div>
       </div>
 
@@ -769,7 +770,7 @@
     }
 
     // ================== Per-Cycle Shuffle Quote Selection ==================
-    let timelineOffset = 0; // 0 = centered on today
+
 
     /**
      * Mulberry32 PRNG - deterministic, same implementation across all platforms.
@@ -858,37 +859,55 @@
     }
 
     // ================== Timeline ==================
+    let currentCycle = null; // null = auto (current), number = specific cycle
 
     function renderTimeline() {
       if (quotes.length === 0) {
         document.getElementById('timelineList').innerHTML = '<div style="color: var(--text-dim); text-align: center;">No quotes</div>';
+        document.getElementById('cycleInfo').textContent = '';
         return;
       }
 
       const today = getDaysSinceEpoch();
+      const n = quotes.length;
+
+      // Determine which cycle to show
+      const todayCycle = today >= 0 ? Math.floor(today / n) : Math.floor((today - n + 1) / n);
+      const displayCycle = currentCycle !== null ? currentCycle : todayCycle;
+
+      // Calculate the start day of this cycle
+      const cycleStartDay = displayCycle * n;
+
+      // Update cycle info
+      const cycleLabel = displayCycle === todayCycle ? 'Current Cycle' :
+        displayCycle < todayCycle ? `${todayCycle - displayCycle} cycle(s) ago` :
+          `${displayCycle - todayCycle} cycle(s) ahead`;
+      document.getElementById('cycleInfo').textContent = `(${cycleLabel})`;
+
       const items = [];
 
-      // Show 5 days: -2, -1, 0 (today), +1, +2 offset by timelineOffset
-      for (let i = -2; i <= 2; i++) {
-        const day = today + timelineOffset + i;
-        const index = getQuoteIndexForDay(day, quotes.length);
-        const isToday = (timelineOffset + i) === 0;
+      // Show all days in this cycle
+      for (let position = 0; position < n; position++) {
+        const day = cycleStartDay + position;
+        const index = getQuoteIndexForDay(day, n);
+        const dayDiff = day - today;
+        const isToday = dayDiff === 0;
 
         const date = new Date(EPOCH_DATE);
         date.setDate(date.getDate() + day);
 
-        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
         let dayLabel = '';
         if (isToday) {
           dayLabel = '<span class="day-label">TODAY</span>';
-        } else if (timelineOffset + i === -1) {
+        } else if (dayDiff === -1) {
           dayLabel = 'yesterday';
-        } else if (timelineOffset + i === 1) {
+        } else if (dayDiff === 1) {
           dayLabel = 'tomorrow';
-        } else if (timelineOffset + i < 0) {
-          dayLabel = `${Math.abs(timelineOffset + i)} days ago`;
+        } else if (dayDiff < 0) {
+          dayLabel = `${Math.abs(dayDiff)} days ago`;
         } else {
-          dayLabel = `in ${timelineOffset + i} days`;
+          dayLabel = `in ${dayDiff} days`;
         }
 
         items.push(`
@@ -902,13 +921,34 @@
       document.getElementById('timelineList').innerHTML = items.join('');
     }
 
-    function loadEarlier() {
-      timelineOffset -= 5;
+    function prevCycle() {
+      const today = getDaysSinceEpoch();
+      const n = quotes.length;
+      const todayCycle = today >= 0 ? Math.floor(today / n) : Math.floor((today - n + 1) / n);
+
+      if (currentCycle === null) {
+        currentCycle = todayCycle - 1;
+      } else {
+        currentCycle--;
+      }
       renderTimeline();
     }
 
-    function loadLater() {
-      timelineOffset += 5;
+    function nextCycle() {
+      const today = getDaysSinceEpoch();
+      const n = quotes.length;
+      const todayCycle = today >= 0 ? Math.floor(today / n) : Math.floor((today - n + 1) / n);
+
+      if (currentCycle === null) {
+        currentCycle = todayCycle + 1;
+      } else {
+        currentCycle++;
+      }
+      renderTimeline();
+    }
+
+    function goToToday() {
+      currentCycle = null;
       renderTimeline();
     }
 
