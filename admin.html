@@ -809,7 +809,8 @@
       target.setHours(0, 0, 0, 0);
 
       const diffTime = target - epoch;
-      const daysSinceEpoch = Math.floor(diffTime / (24 * 60 * 60 * 1000));
+      // Use rounding to handle DST shifts
+      const daysSinceEpoch = Math.round(diffTime / (24 * 60 * 60 * 1000));
 
       // Cap history at ~10 years (3652 days) for O(1) complexity
       // Per user request to prevent infinite loop growth
