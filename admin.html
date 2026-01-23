@@ -528,7 +528,7 @@
 <body>
   <header>
     <div class="header-row">
-      <h1>📿 Quotes Admin v0.9</h1>
+      <h1>📿 Quotes Admin v0.95</h1>
       <span id="status" class="status">Not Connected</span>
     </div>
   </header>
@@ -563,12 +563,12 @@
 
       <!-- Quote Timeline -->
       <div class="timeline-section">
-        <h3>📅 Quote Timeline <span id="cycleInfo" style="font-weight: normal; color: var(--text-dim);"></span></h3>
+        <h3>📅 Quote Timeline <span id="monthInfo" style="font-weight: normal; color: var(--text-dim);"></span></h3>
         <div id="timelineList" class="timeline-list"></div>
         <div class="timeline-nav">
-          <button class="btn-secondary btn-small" onclick="prevCycle()">◀ Prev Cycle</button>
-          <button class="btn-primary btn-small" onclick="goToToday()">Today</button>
-          <button class="btn-secondary btn-small" onclick="nextCycle()">Next Cycle ▶</button>
+          <button class="btn-secondary btn-small" onclick="prevMonth()">◀ Prev Month</button>
+          <button class="btn-primary btn-small" onclick="goToCurrentMonth()">This Month</button>
+          <button class="btn-secondary btn-small" onclick="nextMonth()">Next Month ▶</button>
         </div>
       </div>
 
@@ -635,7 +635,7 @@
     const REPO_OWNER = 'hlibr';
     const REPO_NAME = 'MindfulnessWidget-quotes';
     const FILE_PATH = 'quotes.json';
-    const EPOCH_DATE = new Date(2025, 11, 27); // Dec 27, 2025
+    // No epoch needed - using date-seeded random
 
     // State
     let quotes = [];
@@ -787,51 +787,66 @@
     }
 
     /**
-     * Get days since epoch for today.
+     * Get date seed as YYYYMMDD integer.
      */
-    function getDaysSinceEpoch() {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const epoch = new Date(EPOCH_DATE);
-      epoch.setHours(0, 0, 0, 0);
-      return Math.floor((today - epoch) / (24 * 60 * 60 * 1000));
+    function getDateSeed(date) {
+      return date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
     }
 
     /**
-     * Generate a deterministic shuffle for a given cycle using Fisher-Yates.
+     * Get quote index using iterative epoch algorithm.
+     * Starts from Dec 27, 2025 and calculates forward to ensure history consistency.
      */
-    function getShuffleForCycle(cycle, n) {
-      const arr = Array.from({ length: n }, (_, i) => i);
-      const rng = mulberry32(cycle);
-
-      for (let i = n - 1; i > 0; i--) {
-        const j = Math.floor(rng() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-
-      return arr;
-    }
-
-    /**
-     * Get quote index using per-cycle shuffle with boundary collision fix.
-     * Guarantees no consecutive day repeats.
-     */
-    function getQuoteIndexForDay(day, totalQuotes) {
+    function getQuoteIndexIterative(date, totalQuotes) {
       if (totalQuotes === 0) return 0;
 
-      const cycle = day >= 0 ? Math.floor(day / totalQuotes) : Math.floor((day - totalQuotes + 1) / totalQuotes);
-      const position = ((day % totalQuotes) + totalQuotes) % totalQuotes;
+      // Fixed Epoch: Dec 27, 2025
+      const epoch = new Date(2025, 11, 27); // Month is 0-indexed (11 = Dec)
+      epoch.setHours(0, 0, 0, 0);
 
-      const shuffle = getShuffleForCycle(cycle, totalQuotes);
+      // Normalize target date
+      const target = new Date(date);
+      target.setHours(0, 0, 0, 0);
 
-      // Check for boundary collision with previous cycle
-      let offset = 0;
-      const prevShuffle = getShuffleForCycle(cycle - 1, totalQuotes);
-      if (shuffle[0] === prevShuffle[totalQuotes - 1]) {
-        offset = 1;  // Shift entire cycle by 1 to avoid collision
+      const diffTime = target - epoch;
+      const daysSinceEpoch = Math.floor(diffTime / (24 * 60 * 60 * 1000));
+
+      // Cap history at ~10 years (3652 days) for O(1) complexity
+      // Per user request to prevent infinite loop growth
+      let effectiveDays = daysSinceEpoch;
+      if (effectiveDays > 0) {
+        effectiveDays = effectiveDays % 3652;
       }
 
-      return shuffle[(position + offset) % totalQuotes];
+      let prevIndex = 0;
+
+      // If before epoch, fall back to simple random (shouldn't happen in normal use)
+      if (daysSinceEpoch < 0) {
+        const seed = getDateSeed(target);
+        return Math.floor(mulberry32(seed)() * totalQuotes);
+      }
+
+      // Iteratively calculate history from Epoch up to Target Date
+      for (let i = 0; i <= effectiveDays; i++) {
+        const currentDay = new Date(epoch);
+        currentDay.setDate(epoch.getDate() + i);
+
+        const seed = getDateSeed(currentDay);
+        const rng = mulberry32(seed);
+        const rawIndex = Math.floor(rng() * totalQuotes);
+
+        if (i === 0) {
+          prevIndex = rawIndex;
+        } else {
+          if (rawIndex === prevIndex && totalQuotes > 1) {
+            prevIndex = (rawIndex + 1) % totalQuotes;
+          } else {
+            prevIndex = rawIndex;
+          }
+        }
+      }
+
+      return prevIndex;
     }
 
     /**
@@ -839,8 +854,8 @@
      */
     function getTodayIndex() {
       if (quotes.length === 0) return 0;
-      const day = getDaysSinceEpoch();
-      return getQuoteIndexForDay(day, quotes.length);
+      const today = new Date();
+      return getQuoteIndexIterative(today, quotes.length);
     }
 
     function updateTodayQuote() {
@@ -849,52 +864,50 @@
         todayMeta.textContent = '';
         return;
       }
-      const day = getDaysSinceEpoch();
-      const index = getQuoteIndexForDay(day, quotes.length);
+      const today = new Date();
+      const index = getQuoteIndexIterative(today, quotes.length);
       todayQuote.textContent = quotes[index];
-      todayMeta.textContent = `Quote #${index + 1} of ${quotes.length} • Day ${day} since epoch`;
+      todayMeta.textContent = `Quote #${index + 1} of ${quotes.length}`;
 
       // Also update timeline
       renderTimeline();
     }
 
-    // ================== Timeline ==================
-    let currentCycle = null; // null = auto (current), number = specific cycle
+    // ================== Month-by-Month Timeline ==================
+    let currentMonth = null; // null = current month, Date = specific month
 
     function renderTimeline() {
       if (quotes.length === 0) {
         document.getElementById('timelineList').innerHTML = '<div style="color: var(--text-dim); text-align: center;">No quotes</div>';
-        document.getElementById('cycleInfo').textContent = '';
+        document.getElementById('monthInfo').textContent = '';
         return;
       }
 
-      const today = getDaysSinceEpoch();
-      const n = quotes.length;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-      // Determine which cycle to show
-      const todayCycle = today >= 0 ? Math.floor(today / n) : Math.floor((today - n + 1) / n);
-      const displayCycle = currentCycle !== null ? currentCycle : todayCycle;
+      // Determine which month to show
+      const displayMonth = currentMonth || new Date(today.getFullYear(), today.getMonth(), 1);
 
-      // Calculate the start day of this cycle
-      const cycleStartDay = displayCycle * n;
-
-      // Update cycle info
-      const cycleLabel = displayCycle === todayCycle ? 'Current Cycle' :
-        displayCycle < todayCycle ? `${todayCycle - displayCycle} cycle(s) ago` :
-          `${displayCycle - todayCycle} cycle(s) ahead`;
-      document.getElementById('cycleInfo').textContent = `(${cycleLabel})`;
+      // Update month info
+      const monthLabel = displayMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      const isCurrentMonth = displayMonth.getFullYear() === today.getFullYear() &&
+        displayMonth.getMonth() === today.getMonth();
+      document.getElementById('monthInfo').textContent = isCurrentMonth ? '(This Month)' : `(${monthLabel})`;
 
       const items = [];
 
-      // Show all days in this cycle
-      for (let position = 0; position < n; position++) {
-        const day = cycleStartDay + position;
-        const index = getQuoteIndexForDay(day, n);
-        const dayDiff = day - today;
-        const isToday = dayDiff === 0;
+      // Get all days in this month
+      const year = displayMonth.getFullYear();
+      const month = displayMonth.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        const date = new Date(EPOCH_DATE);
-        date.setDate(date.getDate() + day);
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const index = getQuoteIndexIterative(date, quotes.length);
+
+        const isToday = date.getTime() === today.getTime();
+        const dayDiff = Math.round((date - today) / (24 * 60 * 60 * 1000));
 
         const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
         let dayLabel = '';
@@ -921,34 +934,22 @@
       document.getElementById('timelineList').innerHTML = items.join('');
     }
 
-    function prevCycle() {
-      const today = getDaysSinceEpoch();
-      const n = quotes.length;
-      const todayCycle = today >= 0 ? Math.floor(today / n) : Math.floor((today - n + 1) / n);
-
-      if (currentCycle === null) {
-        currentCycle = todayCycle - 1;
-      } else {
-        currentCycle--;
-      }
+    function prevMonth() {
+      const today = new Date();
+      const current = currentMonth || new Date(today.getFullYear(), today.getMonth(), 1);
+      currentMonth = new Date(current.getFullYear(), current.getMonth() - 1, 1);
       renderTimeline();
     }
 
-    function nextCycle() {
-      const today = getDaysSinceEpoch();
-      const n = quotes.length;
-      const todayCycle = today >= 0 ? Math.floor(today / n) : Math.floor((today - n + 1) / n);
-
-      if (currentCycle === null) {
-        currentCycle = todayCycle + 1;
-      } else {
-        currentCycle++;
-      }
+    function nextMonth() {
+      const today = new Date();
+      const current = currentMonth || new Date(today.getFullYear(), today.getMonth(), 1);
+      currentMonth = new Date(current.getFullYear(), current.getMonth() + 1, 1);
       renderTimeline();
     }
 
-    function goToToday() {
-      currentCycle = null;
+    function goToCurrentMonth() {
+      currentMonth = null;
       renderTimeline();
     }
 
