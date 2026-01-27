@@ -1039,7 +1039,24 @@
     }
 
     function simulateReroll(dateKey) {
-      rerollCounts[dateKey] = (rerollCounts[dateKey] || 0) + 1;
+      const [y, m, d] = dateKey.split('-').map(Number);
+      const date = new Date(y, m - 1, d);
+
+      const currentCount = rerollCounts[dateKey] || 0;
+      const currentIndex = getQuoteIndexIterative(date, quotes.length, currentCount);
+
+      let newCount = currentCount + 1;
+      let newIndex = getQuoteIndexIterative(date, quotes.length, newCount);
+
+      let attempts = 0;
+      // Protection: try up to 10 times to find a different quote
+      while (newIndex === currentIndex && attempts < 10) {
+        newCount++;
+        newIndex = getQuoteIndexIterative(date, quotes.length, newCount);
+        attempts++;
+      }
+
+      rerollCounts[dateKey] = newCount;
       renderTimeline();
     }
 
