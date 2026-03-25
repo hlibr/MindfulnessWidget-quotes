@@ -1,7 +1,7 @@
 {
   "quotes": [
     {
-      "text": "How are you right now?"
+      "text": "How are you?"
     },
     {
       "text": "What if you died today?"
@@ -13,13 +13,13 @@
       "text": "This is a moment in your life"
     },
     {
-      "text": "Your nose is in front of your eyes right now.\nWhat else are you subconsciously ignoring?"
+      "text": "Your nose is in front of your eyes.\nWhat else are you unconsciously ignoring?"
     },
     {
-      "text": "Do you like where this is going?"
+      "text": "Do you like where we're going?"
     },
     {
-      "text": "If this were a dream, would you know?"
+      "text": "If this was a dream, would you know?"
     },
     {
       "text": "A moment of calm"
@@ -28,16 +28,13 @@
       "text": "The rest of your life starts now"
     },
     {
-      "text": "What's in-between your thoughts?"
+      "text": "What's between your thoughts?"
     },
     {
-      "text": "May this brighten your life"
+      "text": "May this illuminate your life"
     },
     {
-      "text": "We are connected through these words"
-    },
-    {
-      "text": "This moment is perfect"
+      "text": "The moment is perfect"
     },
     {
       "text": "The reality of the situation is subjective"
@@ -122,6 +119,9 @@
     },
     {
       "text": "Don't rush the inevitable"
+    },
+    {
+      "text": "This moment is here"
     }
   ]
 }
