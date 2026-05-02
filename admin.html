@@ -597,7 +597,7 @@
 <body>
   <header>
     <div class="header-row">
-      <h1>📿 Quotes Admin v0.99</h1>
+      <h1>📿 Quotes Admin v1.1.1+42</h1>
       <span id="status" class="status">Not Connected</span>
     </div>
   </header>
@@ -701,10 +701,10 @@
 
   <script>
     // Config
+    const ADMIN_VERSION = '1.1.1+42';
     const REPO_OWNER = 'hlibr';
     const REPO_NAME = 'MindfulnessWidget-quotes';
     const FILE_PATH = 'quotes.json';
-    // No epoch needed - using date-seeded random
 
     // State
     let quotes = [];
@@ -727,6 +727,8 @@
     const changesBadge = document.getElementById('changesBadge');
     const bottomActions = document.getElementById('bottomActions');
     const toast = document.getElementById('toast');
+
+    document.title = `Mindfulness Quotes Admin v${ADMIN_VERSION}`;
 
     // Init
     document.addEventListener('DOMContentLoaded', () => {
@@ -842,7 +844,6 @@
 
     // ================== Per-Cycle Shuffle Quote Selection ==================
 
-
     /**
      * Mulberry32 PRNG - deterministic, same implementation across all platforms.
      */
@@ -857,80 +858,86 @@
       };
     }
 
-    /**
-     * Get date seed as YYYYMMDD integer.
-     */
-    function getDateSeed(date) {
-      return date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
-    }
-
-    /**
-     * Get quote index using iterative epoch algorithm.
-     * Starts from Dec 27, 2025 and calculates forward to ensure history consistency.
-     */
-    function getQuoteIndexIterative(date, totalQuotes, rerollCount = 0) {
-      if (totalQuotes === 0) return 0;
-
-      // Fixed Epoch: Dec 27, 2025
-      const epoch = new Date(2025, 11, 27); // Month is 0-indexed (11 = Dec)
+    function getDaySerial(date) {
+      const epoch = new Date(2025, 11, 27);
       epoch.setHours(0, 0, 0, 0);
 
-      // Normalize target date
       const target = new Date(date);
       target.setHours(0, 0, 0, 0);
 
-      const diffTime = target - epoch;
-      // Use rounding to handle DST shifts
-      const daysSinceEpoch = Math.round(diffTime / (24 * 60 * 60 * 1000));
+      return Math.round((target - epoch) / (24 * 60 * 60 * 1000));
+    }
 
-      // Cap history at ~10 years (3652 days) for O(1) complexity
-      let effectiveDays = daysSinceEpoch;
-      if (effectiveDays > 0) {
-        effectiveDays = effectiveDays % 3652;
-      }
-
-      let prevIndex = 0;
-
-      // If before epoch, fall back to simple random (shouldn't happen in normal use)
-      if (daysSinceEpoch < 0) {
-        let seed = getDateSeed(target);
-        if (rerollCount > 0) seed += (rerollCount * 31337);
-        return Math.floor(mulberry32(seed)() * totalQuotes);
-      }
-
-      // Iteratively calculate history from Epoch up to Target Date
-      for (let i = 0; i <= effectiveDays; i++) {
-        const currentDay = new Date(epoch);
-        currentDay.setDate(epoch.getDate() + i);
-
-        let seed = getDateSeed(currentDay);
-
-        // Apply reroll modifier ONLY for the target date
-        if (i === effectiveDays && rerollCount > 0) {
-          seed += (rerollCount * 31337);
+    function computeSourceSeed(texts) {
+      let hash = 0x811C9DC5 >>> 0;
+      for (const text of texts) {
+        for (let i = 0; i < text.length; i++) {
+          hash ^= text.charCodeAt(i);
+          hash = Math.imul(hash, 0x01000193) >>> 0;
         }
+        hash ^= 0x1F;
+        hash = Math.imul(hash, 0x01000193) >>> 0;
+      }
+      return hash >>> 0;
+    }
 
-        const rng = mulberry32(seed);
-        const rawIndex = Math.floor(rng() * totalQuotes);
+    function mixSeed(a, b, c = 0) {
+      let hash = 0x811C9DC5 >>> 0;
+      for (const value of [a, b, c]) {
+        hash ^= (value >>> 0);
+        hash = Math.imul(hash, 0x01000193) >>> 0;
+      }
+      return hash >>> 0;
+    }
 
-        if (i === 0) {
-          prevIndex = rawIndex;
-        } else {
-          // Collision check against the chemically pure 'prevIndex'
-          // SKIP check if we assume user explicitly wanted a reroll (allow landing on yesterday's quote)
-          if (i === effectiveDays && rerollCount > 0) {
-            prevIndex = rawIndex;
-          } else {
-            if (rawIndex === prevIndex && totalQuotes > 1) {
-              prevIndex = (rawIndex + 1) % totalQuotes;
-            } else {
-              prevIndex = rawIndex;
-            }
-          }
-        }
+    function buildCyclePermutation(totalQuotes, cycleNumber, sourceSeed, previousCycleLast = null) {
+      const values = Array.from({ length: totalQuotes }, (_, index) => index);
+      const rng = mulberry32(mixSeed(sourceSeed, totalQuotes, cycleNumber));
+
+      for (let i = totalQuotes - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [values[i], values[j]] = [values[j], values[i]];
       }
 
-      return prevIndex;
+      if (previousCycleLast !== null && totalQuotes > 1 && values[0] === previousCycleLast) {
+        [values[0], values[1]] = [values[1], values[0]];
+      }
+
+      return values;
+    }
+
+    function getQuoteIndexForDate(date, totalQuotes, rerollCount = 0, sourceSeed = 0) {
+      if (totalQuotes <= 0) return 0;
+      if (totalQuotes === 1) return 0;
+
+      const daySerial = getDaySerial(date);
+      const cycleNumber = Math.floor(daySerial / totalQuotes);
+      const positionInCycle = daySerial - (cycleNumber * totalQuotes);
+
+      const previousCycleLast = cycleNumber === 0
+        ? null
+        : buildCyclePermutation(totalQuotes, cycleNumber - 1, sourceSeed).slice(-1)[0];
+
+      const cycle = buildCyclePermutation(totalQuotes, cycleNumber, sourceSeed, previousCycleLast);
+      const baseIndex = cycle[positionInCycle];
+
+      if (rerollCount <= 0) {
+        return baseIndex;
+      }
+
+      const rerollOrder = buildCyclePermutation(totalQuotes, daySerial, mixSeed(sourceSeed, 0x9E3779B9));
+      const targetOffset = (rerollCount - 1) % (totalQuotes - 1);
+      let seen = 0;
+
+      for (const candidate of rerollOrder) {
+        if (candidate === baseIndex) continue;
+        if (seen === targetOffset) {
+          return candidate;
+        }
+        seen++;
+      }
+
+      return baseIndex;
     }
 
     /**
@@ -939,7 +946,7 @@
     function getTodayIndex() {
       if (quotes.length === 0) return 0;
       const today = new Date();
-      return getQuoteIndexIterative(today, quotes.length);
+      return getQuoteIndexForDate(today, quotes.length, 0, computeSourceSeed(quotes));
     }
 
     function updateTodayQuote() {
@@ -949,7 +956,7 @@
         return;
       }
       const today = new Date();
-      const index = getQuoteIndexIterative(today, quotes.length);
+      const index = getQuoteIndexForDate(today, quotes.length, 0, computeSourceSeed(quotes));
       todayQuote.textContent = quotes[index];
       todayMeta.textContent = `Quote #${index + 1} of ${quotes.length}`;
 
@@ -993,7 +1000,7 @@
         const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const rerollCount = rerollCounts[dateKey] || 0;
 
-        const index = getQuoteIndexIterative(date, quotes.length, rerollCount);
+        const index = getQuoteIndexForDate(date, quotes.length, rerollCount, computeSourceSeed(quotes));
 
         const isToday = date.getTime() === today.getTime();
         const dayDiff = Math.round((date - today) / (24 * 60 * 60 * 1000));
@@ -1043,16 +1050,16 @@
       const date = new Date(y, m - 1, d);
 
       const currentCount = rerollCounts[dateKey] || 0;
-      const currentIndex = getQuoteIndexIterative(date, quotes.length, currentCount);
+      const currentIndex = getQuoteIndexForDate(date, quotes.length, currentCount, computeSourceSeed(quotes));
 
       let newCount = currentCount + 1;
-      let newIndex = getQuoteIndexIterative(date, quotes.length, newCount);
+      let newIndex = getQuoteIndexForDate(date, quotes.length, newCount, computeSourceSeed(quotes));
 
       let attempts = 0;
       // Protection: try up to 10 times to find a different quote
       while (newIndex === currentIndex && attempts < 10) {
         newCount++;
-        newIndex = getQuoteIndexIterative(date, quotes.length, newCount);
+        newIndex = getQuoteIndexForDate(date, quotes.length, newCount, computeSourceSeed(quotes));
         attempts++;
       }
 
