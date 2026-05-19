@@ -785,8 +785,8 @@
 
         const content = atob(data.content);
         const json = JSON.parse(content);
-        quotes = json.quotes.map(q => q.text);
-        originalQuotes = [...quotes];
+        quotes = normalizeQuotes(json.quotes || []);
+        originalQuotes = cloneQuotes(quotes);
 
         renderQuotes();
         updateTodayQuote();
@@ -799,22 +799,23 @@
     function renderQuotes() {
       quoteCount.textContent = `(${quotes.length})`;
 
-      const todayIndex = getTodayIndex();
+      const today = getTodayQuote();
+      const todayId = today?.id;
 
-      quoteList.innerHTML = quotes.map((text, i) => `
-        <div class="quote-item ${i === todayIndex ? 'today' : ''}" data-index="${i}" draggable="true">
+      quoteList.innerHTML = quotes.map((quote, i) => `
+        <div class="quote-item ${quote.id === todayId ? 'today' : ''}" data-index="${i}" draggable="true">
           <span class="drag-handle">⋮⋮</span>
           <span class="quote-index">#${i + 1}</span>
           <div class="quote-content">
             <div class="quote-display">
-              <div class="quote-text">${escapeHtml(text)}</div>
+              <div class="quote-text">${escapeHtml(quote.text)}</div>
               <div class="quote-actions">
                 <button class="btn-secondary btn-small" onclick="editQuote(${i})">Edit</button>
                 <button class="btn-danger btn-small" onclick="deleteQuote(${i})">Delete</button>
               </div>
             </div>
             <div class="quote-edit">
-              <textarea id="edit-${i}">${escapeHtml(text)}</textarea>
+              <textarea id="edit-${i}">${escapeHtml(quote.text)}</textarea>
               <div class="edit-actions">
                 <button class="btn-secondary btn-small" onclick="cancelEdit(${i})">Cancel</button>
                 <button class="btn-success btn-small" onclick="saveEdit(${i})">Save</button>
@@ -868,11 +869,11 @@
       return Math.round((target - epoch) / (24 * 60 * 60 * 1000));
     }
 
-    function computeSourceSeed(texts) {
+    function computeSourceSeed(values) {
       let hash = 0x811C9DC5 >>> 0;
-      for (const text of texts) {
-        for (let i = 0; i < text.length; i++) {
-          hash ^= text.charCodeAt(i);
+      for (const value of values) {
+        for (let i = 0; i < value.length; i++) {
+          hash ^= value.charCodeAt(i);
           hash = Math.imul(hash, 0x01000193) >>> 0;
         }
         hash ^= 0x1F;
@@ -944,9 +945,16 @@
      * Get today's quote index.
      */
     function getTodayIndex() {
-      if (quotes.length === 0) return 0;
+      const scheduled = getScheduledQuotes();
+      if (scheduled.length === 0) return 0;
       const today = new Date();
-      return getQuoteIndexForDate(today, quotes.length, 0, computeSourceSeed(quotes));
+      return getQuoteIndexForDate(today, scheduled.length, 0, computeSourceSeed(scheduled.map(q => q.id)));
+    }
+
+    function getTodayQuote() {
+      const scheduled = getScheduledQuotes();
+      if (scheduled.length === 0) return null;
+      return scheduled[getTodayIndex()];
     }
 
     function updateTodayQuote() {
@@ -955,10 +963,11 @@
         todayMeta.textContent = '';
         return;
       }
-      const today = new Date();
-      const index = getQuoteIndexForDate(today, quotes.length, 0, computeSourceSeed(quotes));
-      todayQuote.textContent = quotes[index];
-      todayMeta.textContent = `Quote #${index + 1} of ${quotes.length}`;
+      const scheduled = getScheduledQuotes();
+      const index = getTodayIndex();
+      const quote = scheduled[index];
+      todayQuote.textContent = quote.text;
+      todayMeta.textContent = `Schedule slot #${index + 1} of ${scheduled.length}`;
 
       // Also update timeline
       renderTimeline();
@@ -1000,7 +1009,8 @@
         const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const rerollCount = rerollCounts[dateKey] || 0;
 
-        const index = getQuoteIndexForDate(date, quotes.length, rerollCount, computeSourceSeed(quotes));
+        const scheduled = getScheduledQuotes();
+        const index = getQuoteIndexForDate(date, scheduled.length, rerollCount, computeSourceSeed(scheduled.map(q => q.id)));
 
         const isToday = date.getTime() === today.getTime();
         const dayDiff = Math.round((date - today) / (24 * 60 * 60 * 1000));
@@ -1035,7 +1045,7 @@
           <div class="timeline-item ${isToday ? 'today' : ''}">
             <div class="timeline-content-wrapper">
                 <div class="timeline-date">${dateStr} (${dayLabel})</div>
-                <div class="timeline-quote">${escapeHtml(quotes[index])}</div>
+                <div class="timeline-quote">${escapeHtml(scheduled[index].text)}</div>
             </div>
             ${rerollHtml}
           </div>
@@ -1050,16 +1060,17 @@
       const date = new Date(y, m - 1, d);
 
       const currentCount = rerollCounts[dateKey] || 0;
-      const currentIndex = getQuoteIndexForDate(date, quotes.length, currentCount, computeSourceSeed(quotes));
+      const scheduled = getScheduledQuotes();
+      const currentIndex = getQuoteIndexForDate(date, scheduled.length, currentCount, computeSourceSeed(scheduled.map(q => q.id)));
 
       let newCount = currentCount + 1;
-      let newIndex = getQuoteIndexForDate(date, quotes.length, newCount, computeSourceSeed(quotes));
+      let newIndex = getQuoteIndexForDate(date, scheduled.length, newCount, computeSourceSeed(scheduled.map(q => q.id)));
 
       let attempts = 0;
       // Protection: try up to 10 times to find a different quote
       while (newIndex === currentIndex && attempts < 10) {
         newCount++;
-        newIndex = getQuoteIndexForDate(date, quotes.length, newCount, computeSourceSeed(quotes));
+        newIndex = getQuoteIndexForDate(date, scheduled.length, newCount, computeSourceSeed(scheduled.map(q => q.id)));
         attempts++;
       }
 
@@ -1110,7 +1121,7 @@
         showToast('Quote cannot be empty', 'error');
         return;
       }
-      quotes[index] = newText;
+      quotes[index].text = newText;
       renderQuotes();
       updateTodayQuote();
       showToast('Quote updated');
@@ -1125,7 +1136,7 @@
       // Convert literal \n to actual newlines
       text = text.replace(/\\n/g, '\n');
 
-      quotes.push(text);
+      quotes.push(createQuote(text));
       input.value = '';
       renderQuotes();
       updateTodayQuote();
@@ -1146,7 +1157,7 @@
       const lines = input.value.split('\n').map(l => l.trim().replace(/\\n/g, '\n')).filter(l => l);
       if (lines.length === 0) return;
 
-      quotes.push(...lines);
+      quotes.push(...lines.map(createQuote));
       input.value = '';
       renderQuotes();
       updateTodayQuote();
@@ -1161,7 +1172,7 @@
       // Convert literal \n to actual newlines
       text = text.replace(/\\n/g, '\n');
 
-      quotes.push(text);
+      quotes.push(createQuote(text));
       input.value = '';
       renderQuotes();
       updateTodayQuote();
@@ -1171,7 +1182,7 @@
     // Delete
     function deleteQuote(index) {
       deleteIndex = index;
-      document.getElementById('deleteQuoteText').textContent = quotes[index];
+      document.getElementById('deleteQuoteText').textContent = quotes[index].text;
       document.getElementById('deleteModal').classList.add('active');
     }
 
@@ -1328,7 +1339,7 @@
     }
 
     function discardChanges() {
-      quotes = [...originalQuotes];
+      quotes = cloneQuotes(originalQuotes);
       renderQuotes();
       updateTodayQuote();
       showToast('Changes discarded');
@@ -1338,7 +1349,7 @@
     async function pushChanges() {
       const commitMessage = `Update quotes (${quotes.length} total)`;
 
-      const content = JSON.stringify({ quotes: quotes.map(text => ({ text })) }, null, 2);
+      const content = JSON.stringify({ quotes: quotes.map(({ id, text }) => ({ id, text })) }, null, 2);
       const encoded = btoa(unescape(encodeURIComponent(content)));
 
       try {
@@ -1359,7 +1370,7 @@
 
         const data = await res.json();
         fileSha = data.content.sha;
-        originalQuotes = [...quotes];
+        originalQuotes = cloneQuotes(quotes);
         renderQuotes(); // Re-render to fix event handlers
         updateChangesState();
 
@@ -1370,6 +1381,53 @@
     }
 
     // Utilities
+    function normalizeQuotes(rawQuotes) {
+      const usedIds = new Set();
+      return rawQuotes
+        .map((quote) => {
+          const text = typeof quote === 'string' ? quote.trim() : String(quote.text || '').trim();
+          if (!text) return null;
+
+          const rawId = typeof quote === 'object' && quote ? String(quote.id || '').trim() : '';
+          let id = rawId || stableIdForText(text);
+          let suffix = 2;
+          while (usedIds.has(id)) {
+            id = `${rawId || stableIdForText(text)}_${suffix++}`;
+          }
+          usedIds.add(id);
+          return { id, text };
+        })
+        .filter(Boolean);
+    }
+
+    function createQuote(text) {
+      const usedIds = new Set(quotes.map(q => q.id));
+      const baseId = stableIdForText(`${text}\n${Date.now()}\n${Math.random()}`);
+      let id = baseId;
+      let suffix = 2;
+      while (usedIds.has(id)) {
+        id = `${baseId}_${suffix++}`;
+      }
+      return { id, text };
+    }
+
+    function cloneQuotes(source) {
+      return source.map(({ id, text }) => ({ id, text }));
+    }
+
+    function getScheduledQuotes() {
+      return cloneQuotes(quotes).sort((a, b) => a.id.localeCompare(b.id));
+    }
+
+    function stableIdForText(text) {
+      let hash = 0x811C9DC5 >>> 0;
+      for (let i = 0; i < text.length; i++) {
+        hash ^= text.charCodeAt(i);
+        hash = Math.imul(hash, 0x01000193) >>> 0;
+      }
+      return `q_${(hash >>> 0).toString(36).padStart(7, '0')}`;
+    }
+
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text;
