@@ -927,18 +927,7 @@
       }
 
       const rerollOrder = buildCyclePermutation(totalQuotes, daySerial, mixSeed(sourceSeed, 0x9E3779B9));
-      const targetOffset = (rerollCount - 1) % (totalQuotes - 1);
-      let seen = 0;
-
-      for (const candidate of rerollOrder) {
-        if (candidate === baseIndex) continue;
-        if (seen === targetOffset) {
-          return candidate;
-        }
-        seen++;
-      }
-
-      return baseIndex;
+      return rerollOrder[(rerollCount - 1) % totalQuotes];
     }
 
     /**
