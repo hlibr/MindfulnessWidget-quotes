@@ -684,18 +684,6 @@
     <button class="btn-success" onclick="pushChanges()">Push to GitHub</button>
   </div>
 
-  <!-- Delete Confirmation Modal -->
-  <div id="deleteModal" class="modal-overlay">
-    <div class="modal">
-      <h3>Delete Quote?</h3>
-      <p id="deleteQuoteText" style="color: var(--text-dim);"></p>
-      <div class="modal-actions">
-        <button class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
-        <button class="btn-danger" onclick="confirmDelete()">Delete</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Toast -->
   <div id="toast" class="toast"></div>
 
@@ -712,7 +700,6 @@
     let pat = '';
     let fileSha = '';
     let hasChanges = false;
-    let deleteIndex = -1;
     let draggedIndex = -1;
     let rerollCounts = {}; // Key: "YYYY-MM-DD", Value: count
 
@@ -1178,24 +1165,10 @@
 
     // Delete
     function deleteQuote(index) {
-      deleteIndex = index;
-      document.getElementById('deleteQuoteText').textContent = quotes[index].text;
-      document.getElementById('deleteModal').classList.add('active');
-    }
-
-    function closeDeleteModal() {
-      document.getElementById('deleteModal').classList.remove('active');
-      deleteIndex = -1;
-    }
-
-    function confirmDelete() {
-      if (deleteIndex >= 0) {
-        quotes.splice(deleteIndex, 1);
-        renderQuotes();
-        updateTodayQuote();
-        showToast('Quote deleted');
-      }
-      closeDeleteModal();
+      quotes.splice(index, 1);
+      renderQuotes();
+      updateTodayQuote();
+      showToast('Quote deleted');
     }
 
     // Drag and drop with live reorder and continuous auto-scroll
