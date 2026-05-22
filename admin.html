@@ -208,6 +208,8 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 12px;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
     .quotes-header h2 {
@@ -218,6 +220,63 @@
     .quote-count {
       font-size: 14px;
       color: var(--text-dim);
+    }
+
+    .quotes-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .mode-toggle {
+      display: inline-flex;
+      padding: 2px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius);
+      background: var(--bg);
+    }
+
+    .mode-toggle button {
+      min-height: 32px;
+      padding: 6px 12px;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text-dim);
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    .mode-toggle button.active {
+      background: var(--surface-hover);
+      color: var(--text);
+    }
+
+    .mode-toggle button.has-draft::after {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      margin-left: 6px;
+      border-radius: 50%;
+      background: var(--warning);
+      vertical-align: middle;
+    }
+
+    @media (max-width: 420px) {
+      .quotes-controls {
+        width: 100%;
+        justify-content: space-between;
+        margin-left: 0;
+      }
+
+      .mode-toggle {
+        flex: 1;
+      }
+
+      .mode-toggle button {
+        flex: 1;
+      }
     }
 
     .quote-list {
@@ -622,7 +681,7 @@
 <body>
   <header>
     <div class="header-row">
-      <h1>📿 Quotes Admin v1.1.3+44</h1>
+      <h1>📿 Quotes Admin v1.1.5+46</h1>
       <span id="status" class="status">Not Connected</span>
     </div>
   </header>
@@ -686,7 +745,13 @@
       <!-- Quote List -->
       <div class="quotes-header">
         <h2>All Quotes <span id="quoteCount" class="quote-count"></span></h2>
-        <span id="changesBadge" class="changes-badge hidden">Unsaved</span>
+        <div class="quotes-controls">
+          <div class="mode-toggle" role="group" aria-label="Edit target">
+            <button id="liveModeButton" type="button" onclick="switchEditMode('live')" aria-pressed="true">Live</button>
+            <button id="draftModeButton" type="button" onclick="switchEditMode('draft')" aria-pressed="false">Draft</button>
+          </div>
+          <span id="changesBadge" class="changes-badge hidden">Unsaved</span>
+        </div>
       </div>
 
       <div id="quoteList" class="quote-list">
@@ -715,15 +780,24 @@
 
   <script>
     // Config
-    const ADMIN_VERSION = '1.1.4+45';
+    const ADMIN_VERSION = '1.1.5+46';
     const REPO_OWNER = 'hlibr';
     const REPO_NAME = 'MindfulnessWidget-quotes';
     const FILE_PATH = 'quotes.json';
     const DRAFT_FILE_PATH = 'quotes-draft.json';
+    const EDIT_MODE_LIVE = 'live';
+    const EDIT_MODE_DRAFT = 'draft';
 
     // State
     let quotes = [];
     let originalQuotes = [];
+    let liveQuotes = [];
+    let liveOriginalQuotes = [];
+    let draftQuotes = [];
+    let draftOriginalQuotes = [];
+    let draftAvailable = false;
+    let draftBaseFileSha = '';
+    let editMode = EDIT_MODE_LIVE;
     let pat = '';
     let fileSha = '';
     let draftSha = '';
@@ -741,6 +815,8 @@
     const quoteCount = document.getElementById('quoteCount');
     const changesBadge = document.getElementById('changesBadge');
     const bottomActions = document.getElementById('bottomActions');
+    const liveModeButton = document.getElementById('liveModeButton');
+    const draftModeButton = document.getElementById('draftModeButton');
     const toast = document.getElementById('toast');
 
     document.title = `Mindfulness Quotes Admin v${ADMIN_VERSION}`;
@@ -800,10 +876,11 @@
 
         const content = decodeGitHubContent(data.content);
         const json = JSON.parse(content);
-        quotes = normalizeQuotes(json.quotes || []);
-        originalQuotes = cloneQuotes(quotes);
+        liveQuotes = normalizeQuotes(json.quotes || []);
+        liveOriginalQuotes = cloneQuotes(liveQuotes);
 
         await loadDraft();
+        selectEditMode(draftAvailable ? EDIT_MODE_DRAFT : EDIT_MODE_LIVE, { capture: false, render: false });
         renderQuotes();
         updateTodayQuote();
       } catch (e) {
@@ -812,7 +889,7 @@
     }
 
     async function loadDraft() {
-      draftSha = '';
+      clearDraftState();
 
       try {
         const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DRAFT_FILE_PATH}`, {
@@ -827,7 +904,10 @@
         if (!Array.isArray(json.quotes)) return;
 
         draftSha = data.sha;
-        quotes = normalizeQuotes(json.quotes);
+        draftAvailable = true;
+        draftBaseFileSha = json.baseFileSha || fileSha;
+        draftQuotes = normalizeQuotes(json.quotes);
+        draftOriginalQuotes = cloneQuotes(draftQuotes);
 
         const message = json.baseFileSha && json.baseFileSha !== fileSha
           ? 'Loaded saved draft from GitHub. It was based on an older published file.'
@@ -836,6 +916,75 @@
       } catch (e) {
         showToast('Draft load failed: ' + e.message, 'error');
       }
+    }
+
+    function switchEditMode(mode) {
+      if (mode !== EDIT_MODE_LIVE && mode !== EDIT_MODE_DRAFT) return;
+      if (mode === editMode) return;
+
+      selectEditMode(mode);
+    }
+
+    function selectEditMode(mode, options = {}) {
+      const { capture = true, render = true } = options;
+      if (capture) {
+        syncActiveModeState();
+      }
+
+      if (mode === EDIT_MODE_DRAFT && !draftAvailable) {
+        draftAvailable = true;
+        draftBaseFileSha = fileSha;
+        draftQuotes = cloneQuotes(liveQuotes);
+        draftOriginalQuotes = cloneQuotes(liveOriginalQuotes);
+      }
+
+      editMode = mode;
+      if (editMode === EDIT_MODE_DRAFT) {
+        quotes = cloneQuotes(draftQuotes);
+        originalQuotes = cloneQuotes(draftOriginalQuotes);
+      } else {
+        quotes = cloneQuotes(liveQuotes);
+        originalQuotes = cloneQuotes(liveOriginalQuotes);
+      }
+
+      updateModeToggle();
+      if (render) {
+        renderQuotes();
+        updateTodayQuote();
+      }
+    }
+
+    function syncActiveModeState() {
+      if (editMode === EDIT_MODE_DRAFT) {
+        draftQuotes = cloneQuotes(quotes);
+        draftOriginalQuotes = cloneQuotes(originalQuotes);
+      } else {
+        liveQuotes = cloneQuotes(quotes);
+        liveOriginalQuotes = cloneQuotes(originalQuotes);
+      }
+    }
+
+    function updateModeToggle() {
+      liveModeButton.classList.toggle('active', editMode === EDIT_MODE_LIVE);
+      draftModeButton.classList.toggle('active', editMode === EDIT_MODE_DRAFT);
+      draftModeButton.classList.toggle('has-draft', hasDraftWork());
+      liveModeButton.setAttribute('aria-pressed', editMode === EDIT_MODE_LIVE ? 'true' : 'false');
+      draftModeButton.setAttribute('aria-pressed', editMode === EDIT_MODE_DRAFT ? 'true' : 'false');
+    }
+
+    function hasDraftWork() {
+      return Boolean(draftSha) ||
+        (editMode === EDIT_MODE_DRAFT
+          ? hasChanges
+          : JSON.stringify(draftQuotes) !== JSON.stringify(draftOriginalQuotes));
+    }
+
+    function clearDraftState() {
+      draftSha = '';
+      draftAvailable = false;
+      draftBaseFileSha = '';
+      draftQuotes = [];
+      draftOriginalQuotes = [];
     }
 
     // Render quote list
@@ -1361,20 +1510,31 @@
     function updateChangesState() {
       hasChanges = JSON.stringify(quotes) !== JSON.stringify(originalQuotes);
       changesBadge.classList.toggle('hidden', !hasChanges);
-      bottomActions.classList.toggle('hidden', !hasChanges && !draftSha);
+      bottomActions.classList.toggle('hidden', !hasChanges && !(editMode === EDIT_MODE_DRAFT && draftSha));
+      updateModeToggle();
     }
 
     async function discardChanges() {
-      const hadDraft = Boolean(draftSha);
-      if (hadDraft) {
-        const deletedDraft = await deleteDraft();
-        if (!deletedDraft) return;
+      if (editMode === EDIT_MODE_DRAFT) {
+        const hadRemoteDraft = Boolean(draftSha);
+        const hadDraft = draftAvailable;
+        if (hadRemoteDraft) {
+          const deletedDraft = await deleteDraft();
+          if (!deletedDraft) return;
+        } else {
+          clearDraftState();
+        }
+
+        selectEditMode(EDIT_MODE_LIVE, { capture: false });
+        showToast(hadRemoteDraft ? 'Draft discarded and deleted' : hadDraft ? 'Draft discarded' : 'Changes discarded');
+        return;
       }
 
       quotes = cloneQuotes(originalQuotes);
+      syncActiveModeState();
       renderQuotes();
       updateTodayQuote();
-      showToast(hadDraft ? 'Changes discarded and draft deleted' : 'Changes discarded');
+      showToast('Changes discarded');
     }
 
     // Save draft to GitHub
@@ -1384,6 +1544,7 @@
         return;
       }
 
+      const savingLiveAsDraft = editMode === EDIT_MODE_LIVE;
       const content = encodeJsonForGitHub({
         updatedAt: new Date().toISOString(),
         baseFileSha: fileSha,
@@ -1412,6 +1573,20 @@
 
         const data = await res.json();
         draftSha = data.content.sha;
+        draftAvailable = true;
+        draftBaseFileSha = fileSha;
+        draftQuotes = getQuotesForStorage();
+        draftOriginalQuotes = cloneQuotes(draftQuotes);
+
+        if (savingLiveAsDraft) {
+          liveQuotes = cloneQuotes(liveOriginalQuotes);
+          selectEditMode(EDIT_MODE_DRAFT, { capture: false });
+        } else {
+          originalQuotes = cloneQuotes(quotes);
+          syncActiveModeState();
+          updateChangesState();
+          updateModeToggle();
+        }
 
         showToast('Draft saved to GitHub', 'success');
       } catch (e) {
@@ -1422,6 +1597,8 @@
     // Push to GitHub
     async function pushChanges() {
       const commitMessage = `Update quotes (${quotes.length} total)`;
+      const publishingDraft = editMode === EDIT_MODE_DRAFT;
+      const remoteDraftSha = draftSha;
 
       const encoded = encodeJsonForGitHub({ quotes: getQuotesForStorage() });
 
@@ -1443,19 +1620,39 @@
 
         const data = await res.json();
         fileSha = data.content.sha;
+        liveQuotes = getQuotesForStorage();
+        liveOriginalQuotes = cloneQuotes(liveQuotes);
+
+        if (publishingDraft) {
+          draftQuotes = getQuotesForStorage();
+          draftOriginalQuotes = cloneQuotes(draftQuotes);
+
+          const deletedDraft = remoteDraftSha ? await deleteDraft(true) : true;
+          if (deletedDraft) {
+            clearDraftState();
+            selectEditMode(EDIT_MODE_LIVE, { capture: false });
+          } else {
+            originalQuotes = cloneQuotes(quotes);
+            syncActiveModeState();
+            renderQuotes();
+            updateTodayQuote();
+          }
+
+          showToast(
+            remoteDraftSha && !deletedDraft
+              ? 'Pushed to GitHub, but draft cleanup failed.'
+              : 'Draft pushed to GitHub and deleted.',
+            remoteDraftSha && !deletedDraft ? 'warning' : 'success'
+          );
+          return;
+        }
+
         originalQuotes = cloneQuotes(quotes);
+        syncActiveModeState();
         renderQuotes(); // Re-render to fix event handlers
         updateChangesState();
-        const hadDraft = Boolean(draftSha);
-        const deletedDraft = await deleteDraft(true);
-        updateChangesState();
 
-        showToast(
-          hadDraft && !deletedDraft
-            ? 'Pushed to GitHub, but draft cleanup failed.'
-            : 'Pushed to GitHub! CDN will update shortly.',
-          hadDraft && !deletedDraft ? 'warning' : 'success'
-        );
+        showToast('Pushed to GitHub! CDN will update shortly.', 'success');
       } catch (e) {
         showToast('Push failed: ' + e.message, 'error');
       }
@@ -1479,7 +1676,7 @@
 
         if (res.status !== 404 && !res.ok) throw new Error('Delete failed');
 
-        draftSha = '';
+        clearDraftState();
         return true;
       } catch (e) {
         if (!silent) {
