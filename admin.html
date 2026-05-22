@@ -772,7 +772,7 @@
   <div id="bottomActions" class="bottom-actions hidden">
     <button class="btn-secondary" onclick="discardChanges()">Discard</button>
     <button class="btn-warning" onclick="saveDraft()">Save draft</button>
-    <button class="btn-success" onclick="pushChanges()">Push to GitHub</button>
+    <button id="pushButton" class="btn-success" onclick="pushChanges()">Push to GitHub</button>
   </div>
 
   <!-- Toast -->
@@ -815,6 +815,7 @@
     const quoteCount = document.getElementById('quoteCount');
     const changesBadge = document.getElementById('changesBadge');
     const bottomActions = document.getElementById('bottomActions');
+    const pushButton = document.getElementById('pushButton');
     const liveModeButton = document.getElementById('liveModeButton');
     const draftModeButton = document.getElementById('draftModeButton');
     const toast = document.getElementById('toast');
@@ -970,6 +971,7 @@
       draftModeButton.classList.toggle('has-draft', hasDraftWork());
       liveModeButton.setAttribute('aria-pressed', editMode === EDIT_MODE_LIVE ? 'true' : 'false');
       draftModeButton.setAttribute('aria-pressed', editMode === EDIT_MODE_DRAFT ? 'true' : 'false');
+      pushButton.textContent = editMode === EDIT_MODE_DRAFT ? 'Push to Live' : 'Push to GitHub';
     }
 
     function hasDraftWork() {
