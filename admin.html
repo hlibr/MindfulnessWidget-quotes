@@ -1103,28 +1103,18 @@
       return values;
     }
 
+    function getPingPongIndex(daySerial, totalQuotes) {
+      const period = (totalQuotes * 2) - 2;
+      const position = ((daySerial % period) + period) % period;
+      return position < totalQuotes ? position : period - position;
+    }
+
     function getQuoteIndexForDate(date, totalQuotes, rerollCount = 0, sourceSeed = 0) {
       if (totalQuotes <= 0) return 0;
       if (totalQuotes === 1) return 0;
 
       const daySerial = getDaySerial(date);
-      if (totalQuotes === 2) {
-        if (rerollCount <= 0) {
-          return (daySerial + (sourceSeed & 1)) % 2;
-        }
-        const rerollOrder = buildCyclePermutation(totalQuotes, daySerial, mixSeed(sourceSeed, 0x9E3779B9));
-        return rerollOrder[(rerollCount - 1) % totalQuotes];
-      }
-
-      const cycleNumber = Math.floor(daySerial / totalQuotes);
-      const positionInCycle = daySerial - (cycleNumber * totalQuotes);
-
-      const previousCycleLast = cycleNumber === 0
-        ? null
-        : buildCyclePermutation(totalQuotes, cycleNumber - 1, sourceSeed).slice(-1)[0];
-
-      const cycle = buildCyclePermutation(totalQuotes, cycleNumber, sourceSeed, previousCycleLast);
-      const baseIndex = cycle[positionInCycle];
+      const baseIndex = getPingPongIndex(daySerial, totalQuotes);
 
       if (rerollCount <= 0) {
         return baseIndex;
@@ -1753,7 +1743,7 @@
     }
 
     function getScheduledQuotes() {
-      return cloneQuotes(quotes).sort((a, b) => a.id.localeCompare(b.id));
+      return cloneQuotes(quotes);
     }
 
     function stableIdForText(text) {
