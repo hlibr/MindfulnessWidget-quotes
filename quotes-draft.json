@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-22T13:25:01.012Z",
+  "updatedAt": "2026-05-22T13:34:27.350Z",
   "baseFileSha": "900906b990869fe494660a2e5dc4756e60abb12d",
   "quotes": [
     {
@@ -21,6 +21,10 @@
     {
       "id": "q_1pow8za",
       "text": "There's no time"
+    },
+    {
+      "id": "q_15po2a6",
+      "text": "This moment is ever-changing"
     }
   ]
 }
