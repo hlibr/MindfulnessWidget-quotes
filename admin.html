@@ -883,7 +883,7 @@
         liveOriginalQuotes = cloneQuotes(liveQuotes);
 
         await loadDraft();
-        selectEditMode(draftAvailable ? EDIT_MODE_DRAFT : EDIT_MODE_LIVE, { capture: false, render: false });
+        selectEditMode(EDIT_MODE_LIVE, { capture: false, render: false });
         renderQuotes();
         updateTodayQuote();
       } catch (e) {
