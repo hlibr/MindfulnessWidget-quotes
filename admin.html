@@ -681,7 +681,7 @@
 <body>
   <header>
     <div class="header-row">
-      <h1>📿 Quotes Admin v1.1.4+45</h1>
+      <h1>📿 Quotes Admin v1.1.4+46</h1>
       <span id="status" class="status">Not Connected</span>
     </div>
   </header>
@@ -780,7 +780,7 @@
 
   <script>
     // Config
-    const ADMIN_VERSION = '1.1.4+45';
+    const ADMIN_VERSION = '1.1.4+46';
     const REPO_OWNER = 'hlibr';
     const REPO_NAME = 'MindfulnessWidget-quotes';
     const FILE_PATH = 'quotes.json';
@@ -829,15 +829,16 @@
       const savedPat = localStorage.getItem('github_pat');
       if (savedPat) {
         document.getElementById('patInput').value = savedPat;
-        connect();
+        connect({ silent: true });
       }
     });
 
     // Auth
-    async function connect() {
+    async function connect(options = {}) {
+      const { silent = false } = options;
       pat = document.getElementById('patInput').value.trim();
       if (!pat) {
-        showToast('Please enter a token', 'error');
+        if (!silent) showToast('Please enter a token', 'error');
         return;
       }
 
@@ -859,14 +860,15 @@
         authSection.classList.add('hidden');
         mainContent.classList.remove('hidden');
 
-        await loadQuotes();
+        await loadQuotes({ silent });
       } catch (e) {
-        showToast('Connection failed: ' + e.message, 'error');
+        if (!silent) showToast('Connection failed: ' + e.message, 'error');
       }
     }
 
     // Load quotes from GitHub
-    async function loadQuotes() {
+    async function loadQuotes(options = {}) {
+      const { silent = false } = options;
       try {
         const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
           headers: { Authorization: `token ${pat}` }
@@ -882,7 +884,7 @@
         liveQuotes = normalizeQuotes(json.quotes || []);
         liveOriginalQuotes = cloneQuotes(liveQuotes);
 
-        await loadDraft();
+        await loadDraft({ silent });
         selectEditMode(EDIT_MODE_LIVE, { capture: false, render: false });
         renderQuotes();
         updateTodayQuote();
@@ -891,7 +893,8 @@
       }
     }
 
-    async function loadDraft() {
+    async function loadDraft(options = {}) {
+      const { silent = false } = options;
       clearDraftState();
 
       try {
@@ -912,12 +915,14 @@
         draftQuotes = normalizeQuotes(json.quotes);
         draftOriginalQuotes = cloneQuotes(draftQuotes);
 
-        const message = json.baseFileSha && json.baseFileSha !== fileSha
-          ? 'Loaded saved draft from GitHub. It was based on an older published file.'
-          : 'Loaded saved draft from GitHub';
-        showToast(message, json.baseFileSha && json.baseFileSha !== fileSha ? 'warning' : 'success');
+        if (!silent) {
+          const message = json.baseFileSha && json.baseFileSha !== fileSha
+            ? 'Loaded saved draft from GitHub. It was based on an older published file.'
+            : 'Loaded saved draft from GitHub';
+          showToast(message, json.baseFileSha && json.baseFileSha !== fileSha ? 'warning' : 'success');
+        }
       } catch (e) {
-        showToast('Draft load failed: ' + e.message, 'error');
+        if (!silent) showToast('Draft load failed: ' + e.message, 'error');
       }
     }
 
