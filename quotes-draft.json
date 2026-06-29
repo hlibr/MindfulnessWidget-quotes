@@ -1,10 +1,14 @@
 {
-  "updatedAt": "2026-06-29T12:28:39.639Z",
-  "baseFileSha": "28fca8b2359763083c9be32d8281115ffa17b098",
+  "updatedAt": "2026-06-29T13:17:38.229Z",
+  "baseFileSha": "22c20bf502b2565f110a3e71610d4c3ce55fd32e",
   "quotes": [
     {
       "id": "q_0rczcuj",
       "text": "This is your life"
+    },
+    {
+      "id": "q_03tsu3f",
+      "text": "Be present"
     }
   ]
 }
