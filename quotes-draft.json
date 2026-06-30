@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-29T13:17:38.229Z",
+  "updatedAt": "2026-06-30T06:28:03.389Z",
   "baseFileSha": "22c20bf502b2565f110a3e71610d4c3ce55fd32e",
   "quotes": [
     {
@@ -9,6 +9,10 @@
     {
       "id": "q_03tsu3f",
       "text": "Be present"
+    },
+    {
+      "id": "q_0njaal4",
+      "text": "Find your center anywhere"
     }
   ]
 }
