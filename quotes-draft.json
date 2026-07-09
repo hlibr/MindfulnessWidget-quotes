@@ -1,18 +1,238 @@
 {
-  "updatedAt": "2026-06-30T06:28:03.389Z",
-  "baseFileSha": "22c20bf502b2565f110a3e71610d4c3ce55fd32e",
+  "updatedAt": "2026-07-09T15:34:14.205Z",
+  "baseFileSha": "8158961d73416b2c9ca5858400b0f817a2b5f51b",
   "quotes": [
     {
-      "id": "q_0rczcuj",
+      "id": "q_0o9mqsh",
+      "text": "What if you died today?"
+    },
+    {
+      "id": "q_0875fza",
+      "text": "Remember that you're making memories right now"
+    },
+    {
+      "id": "q_0yq4k04",
+      "text": "This is a moment in your life"
+    },
+    {
+      "id": "q_0vjdju0",
+      "text": "Do you like where this is going?"
+    },
+    {
+      "id": "q_02d1wuf",
+      "text": "If this were a dream, would you know?"
+    },
+    {
+      "id": "q_1fu1m7w",
+      "text": "The reality of the situation is subjective"
+    },
+    {
+      "id": "q_1lq8vpm",
+      "text": "You are reading these words right now"
+    },
+    {
+      "id": "q_0mdjrg4",
+      "text": "May your thoughts flow unimpeded"
+    },
+    {
+      "id": "q_0rbnl18",
+      "text": "This phone is temporary"
+    },
+    {
+      "id": "q_1l7b4gj",
+      "text": "The moment is you"
+    },
+    {
+      "id": "q_1kgp7je",
+      "text": "Your life led to this moment"
+    },
+    {
+      "id": "q_1alrlh3",
+      "text": "It's okay to do it your own way"
+    },
+    {
+      "id": "q_07j3ai7",
+      "text": "Take as long as you want"
+    },
+    {
+      "id": "q_0lw1zik",
+      "text": "I love you anyway"
+    },
+    {
+      "id": "q_0ur5on3",
+      "text": "There's no sin like life"
+    },
+    {
+      "id": "q_0q75l84",
+      "text": "You are here"
+    },
+    {
+      "id": "q_1t1qpk2",
+      "text": "You are now"
+    },
+    {
+      "id": "q_02j4o4w",
+      "text": "It's OK"
+    },
+    {
+      "id": "q_0klsu1n",
+      "text": "Continue straight ahead"
+    },
+    {
+      "id": "q_0i0j66q",
+      "text": "You are still here"
+    },
+    {
+      "id": "q_0hxy32v",
+      "text": "Focus on your breath"
+    },
+    {
+      "id": "q_1t83cx9",
+      "text": "Everything is malleable"
+    },
+    {
+      "id": "q_1s4azgu",
+      "text": "May this brighten your life"
+    },
+    {
+      "id": "q_1iwcz5g",
+      "text": "Life... a timeless classic"
+    },
+    {
+      "id": "q_0w9ok7d",
+      "text": "Fall into the hole"
+    },
+    {
+      "id": "q_0uddrgn",
+      "text": "Life is an experiment"
+    },
+    {
+      "id": "q_0lq36fu",
+      "text": "Let it breathe"
+    },
+    {
+      "id": "q_17izl1i",
+      "text": "This moment is here"
+    },
+    {
+      "id": "q_1bpfgpg",
+      "text": "Anything is possible"
+    },
+    {
+      "id": "q_1z0brxw",
+      "text": "You are the universe"
+    },
+    {
+      "id": "q_1exlajb",
+      "text": "Life is happening right now"
+    },
+    {
+      "id": "q_1czw4u5",
+      "text": "Here is now"
+    },
+    {
+      "id": "q_171qo26",
+      "text": "You are right here"
+    },
+    {
+      "id": "q_0ffukwl",
+      "text": "Enjoy the waves"
+    },
+    {
+      "id": "q_0kccgyo",
+      "text": "A moment of calm"
+    },
+    {
+      "id": "q_1g7l3ku",
+      "text": "Be conscious of your breath right now"
+    },
+    {
+      "id": "q_0exu0q5",
+      "text": "Everything is perfect"
+    },
+    {
+      "id": "q_0of8kf5",
+      "text": "This is happening right now"
+    },
+    {
+      "id": "q_1a3b0oo",
+      "text": "Success is outside the trial"
+    },
+    {
+      "id": "q_1ku1wgb",
+      "text": "Feel the air touching your skin"
+    },
+    {
+      "id": "q_1wlppsv",
+      "text": "Be here right now"
+    },
+    {
+      "id": "q_13q2635",
+      "text": "Notice things appearing and disappearing from awareness"
+    },
+    {
+      "id": "q_1uct07l",
+      "text": "This moment is unique"
+    },
+    {
+      "id": "q_0p2o7rk",
+      "text": "Existence is effortless"
+    },
+    {
+      "id": "q_1vuew1s",
+      "text": "You are everything"
+    },
+    {
+      "id": "q_1uobqix",
       "text": "This is your life"
     },
     {
-      "id": "q_03tsu3f",
+      "id": "q_04wsbcd",
+      "text": "Everything is here"
+    },
+    {
+      "id": "q_1wepxoi",
+      "text": "This is all part of the plot"
+    },
+    {
+      "id": "q_02ovvhs",
+      "text": "What is your best self?"
+    },
+    {
+      "id": "q_0gte8wo",
+      "text": "Be aware of your breath"
+    },
+    {
+      "id": "q_151u3s6",
+      "text": "Here and now"
+    },
+    {
+      "id": "q_0q4ymiz",
+      "text": "It's fine to just be here right now"
+    },
+    {
+      "id": "q_00042be",
+      "text": "Life is but a moment in space"
+    },
+    {
+      "id": "q_1h57hmn",
+      "text": "This is unique"
+    },
+    {
+      "id": "q_01665l9",
+      "text": "This moment is endless"
+    },
+    {
+      "id": "q_0f5i756",
       "text": "Be present"
     },
     {
-      "id": "q_0njaal4",
-      "text": "Find your center anywhere"
+      "id": "q_0efm7o5",
+      "text": "You can always return to your breath"
+    },
+    {
+      "id": "q_1jotbju",
+      "text": "Now2"
     }
   ]
 }
