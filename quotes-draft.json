@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-30T13:39:26.471Z",
+  "updatedAt": "2026-07-30T13:40:28.133Z",
   "baseFileSha": "42993822103b6c518d517e4043ed69230f945ca2",
   "quotes": [
     {
@@ -79,10 +79,6 @@
       "text": "You are still here"
     },
     {
-      "id": "q_0hxy32v",
-      "text": "Focus on your breath"
-    },
-    {
       "id": "q_1t83cx9",
       "text": "Everything is malleable"
     },
@@ -117,10 +113,6 @@
     {
       "id": "q_1z0brxw",
       "text": "You are the universe"
-    },
-    {
-      "id": "q_1czw4u5",
-      "text": "Here is now"
     },
     {
       "id": "q_171qo26",
@@ -235,16 +227,8 @@
       "text": "It’s happening right now"
     },
     {
-      "id": "q_07q96o3",
-      "text": "Just breathe"
-    },
-    {
       "id": "q_08gfeja",
       "text": "Nothing to be, but a speck in the wind"
-    },
-    {
-      "id": "q_11igrpq",
-      "text": "S"
     }
   ]
 }
