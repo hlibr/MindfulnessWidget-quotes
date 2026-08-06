@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-06T12:54:59.729Z",
+  "updatedAt": "2026-08-06T16:07:55.289Z",
   "baseFileSha": "73a87f859d73f27481d05e01aac750c9e8916b1e",
   "quotes": [
     {
@@ -229,6 +229,10 @@
     {
       "id": "q_187va3r",
       "text": "Don’t be bothered by anything, internal or external"
+    },
+    {
+      "id": "q_0bt8jz1",
+      "text": "The point is simply the direction of the arrow"
     }
   ]
 }
