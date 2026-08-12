@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-09T08:16:37.383Z",
+  "updatedAt": "2026-08-12T08:24:15.288Z",
   "baseFileSha": "3b6b65134513b914c202b3fe102dafc7fcb9b2e9",
   "quotes": [
     {
@@ -229,6 +229,10 @@
     {
       "id": "q_0bt8jz1",
       "text": "The point is simply the direction of the arrow"
+    },
+    {
+      "id": "q_17ptz2p",
+      "text": "Everything is happening right now"
     }
   ]
 }
