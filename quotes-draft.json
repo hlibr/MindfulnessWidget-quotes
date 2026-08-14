@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-14T05:18:43.300Z",
-  "baseFileSha": "33a589346cb725525f58b6d8f57a46d2bd07f432",
+  "updatedAt": "2026-08-14T14:33:37.668Z",
+  "baseFileSha": "e7a6c49f6c540b4bcd21298c61274900b49b4a24",
   "quotes": [
     {
       "id": "q_0o9mqsh",
@@ -233,6 +233,10 @@
     {
       "id": "q_0yfltb0",
       "text": "Once this is over — don’t forget to rewind the tape"
+    },
+    {
+      "id": "q_0l5llgm",
+      "text": "With life, comes death"
     }
   ]
 }
