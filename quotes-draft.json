@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-15T06:55:25.583Z",
-  "baseFileSha": "f3b867b3100a9784eff289254c543c68d4d7c30d",
+  "updatedAt": "2026-08-15T10:30:06.075Z",
+  "baseFileSha": "7ffbd0020349d0ff8269efdeabe30585fbb8e1a7",
   "quotes": [
     {
       "id": "q_0o9mqsh",
@@ -225,6 +225,10 @@
     {
       "id": "q_0l5llgm",
       "text": "With life, comes death"
+    },
+    {
+      "id": "q_12u0y71",
+      "text": "Sometimes it’s good to start again"
     }
   ]
 }
