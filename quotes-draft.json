@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-17T16:42:36.138Z",
+  "updatedAt": "2026-08-17T17:44:47.109Z",
   "baseFileSha": "f154f5043cb44ce2df6e642ad6968e9646666aa4",
   "quotes": [
     {
@@ -245,6 +245,10 @@
     {
       "id": "q_1jab5cv",
       "text": "There’s no permanent you"
+    },
+    {
+      "id": "q_0v6i5um",
+      "text": "It's always the present moment"
     }
   ]
 }
