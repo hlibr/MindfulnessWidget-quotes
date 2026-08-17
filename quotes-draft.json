@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-17T13:08:08.652Z",
+  "updatedAt": "2026-08-17T16:42:36.138Z",
   "baseFileSha": "f154f5043cb44ce2df6e642ad6968e9646666aa4",
   "quotes": [
     {
@@ -237,6 +237,14 @@
     {
       "id": "q_0lr3apy",
       "text": "Take your best shot, don’t look at the consequences"
+    },
+    {
+      "id": "q_0mv6m7b",
+      "text": "Truly it does/doesn’t matter"
+    },
+    {
+      "id": "q_1jab5cv",
+      "text": "There’s no permanent you"
     }
   ]
 }
