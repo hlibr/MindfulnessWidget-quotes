@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-16T22:29:45.508Z",
-  "baseFileSha": "7ffbd0020349d0ff8269efdeabe30585fbb8e1a7",
+  "updatedAt": "2026-08-17T13:05:20.759Z",
+  "baseFileSha": "f154f5043cb44ce2df6e642ad6968e9646666aa4",
   "quotes": [
     {
       "id": "q_0o9mqsh",
@@ -77,10 +77,6 @@
     {
       "id": "q_1s4azgu",
       "text": "May this brighten your life"
-    },
-    {
-      "id": "q_1iwcz5g",
-      "text": "Life... a timeless classic"
     },
     {
       "id": "q_0w9ok7d",
@@ -233,6 +229,10 @@
     {
       "id": "q_0jt06cn",
       "text": "You're just here"
+    },
+    {
+      "id": "q_0pxtmm1",
+      "text": "Don’t hurt yourself"
     }
   ]
 }
