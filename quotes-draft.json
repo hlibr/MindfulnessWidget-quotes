@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-17T13:05:20.759Z",
+  "updatedAt": "2026-08-17T13:08:08.652Z",
   "baseFileSha": "f154f5043cb44ce2df6e642ad6968e9646666aa4",
   "quotes": [
     {
@@ -233,6 +233,10 @@
     {
       "id": "q_0pxtmm1",
       "text": "Don’t hurt yourself"
+    },
+    {
+      "id": "q_0lr3apy",
+      "text": "Take your best shot, don’t look at the consequences"
     }
   ]
 }
