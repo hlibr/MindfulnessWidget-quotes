@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-18T15:41:30.059Z",
+  "updatedAt": "2026-08-18T15:53:27.731Z",
   "baseFileSha": "f154f5043cb44ce2df6e642ad6968e9646666aa4",
   "quotes": [
     {
@@ -269,6 +269,10 @@
     {
       "id": "q_0xmk6fa",
       "text": "Everything is you"
+    },
+    {
+      "id": "q_0su3jcm",
+      "text": "It’s all happening right now"
     }
   ]
 }
