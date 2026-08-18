@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-18T15:29:32.621Z",
+  "updatedAt": "2026-08-18T15:35:11.672Z",
   "baseFileSha": "f154f5043cb44ce2df6e642ad6968e9646666aa4",
   "quotes": [
     {
@@ -265,6 +265,10 @@
     {
       "id": "q_1y41vbk",
       "text": "Who is reading this right now?"
+    },
+    {
+      "id": "q_0dsk1ke",
+      "text": "You are everything"
     }
   ]
 }
