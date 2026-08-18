@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-17T17:44:47.109Z",
+  "updatedAt": "2026-08-18T12:15:11.045Z",
   "baseFileSha": "f154f5043cb44ce2df6e642ad6968e9646666aa4",
   "quotes": [
     {
@@ -249,6 +249,10 @@
     {
       "id": "q_0v6i5um",
       "text": "It's always the present moment"
+    },
+    {
+      "id": "q_0ye38vv",
+      "text": "Don’t worry about life, you’ll die anyway"
     }
   ]
 }
