@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-18T15:28:32.812Z",
+  "updatedAt": "2026-08-18T15:29:32.621Z",
   "baseFileSha": "f154f5043cb44ce2df6e642ad6968e9646666aa4",
   "quotes": [
     {
@@ -261,6 +261,10 @@
     {
       "id": "q_1tx6nsa",
       "text": "Things are happening right now"
+    },
+    {
+      "id": "q_1y41vbk",
+      "text": "Who is reading this right now?"
     }
   ]
 }
