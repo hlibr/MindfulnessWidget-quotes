@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-21T13:05:46.411Z",
+  "updatedAt": "2026-08-23T08:10:15.733Z",
   "baseFileSha": "f154f5043cb44ce2df6e642ad6968e9646666aa4",
   "quotes": [
     {
@@ -289,6 +289,10 @@
     {
       "id": "q_0rjp4tj",
       "text": "You’re just a balloon animal filled with thoughts"
+    },
+    {
+      "id": "q_04qf2qh",
+      "text": "Just observe what happens"
     }
   ]
 }
