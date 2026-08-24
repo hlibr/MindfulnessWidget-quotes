@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-23T08:10:15.733Z",
-  "baseFileSha": "f154f5043cb44ce2df6e642ad6968e9646666aa4",
+  "updatedAt": "2026-08-24T11:00:06.917Z",
+  "baseFileSha": "fdba8ad72eb1ab39f0eeaca367e92e76d1de39d3",
   "quotes": [
     {
       "id": "q_0o9mqsh",
@@ -259,10 +259,6 @@
       "text": "Who is reading this right now?"
     },
     {
-      "id": "q_0uvjrz1",
-      "text": "Everything is fine"
-    },
-    {
       "id": "q_0xmk6fa",
       "text": "Everything is you"
     },
@@ -289,10 +285,6 @@
     {
       "id": "q_0rjp4tj",
       "text": "You’re just a balloon animal filled with thoughts"
-    },
-    {
-      "id": "q_04qf2qh",
-      "text": "Just observe what happens"
     }
   ]
 }
