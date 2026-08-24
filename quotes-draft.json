@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-24T11:06:52.587Z",
+  "updatedAt": "2026-08-24T14:25:07.041Z",
   "baseFileSha": "38886f0ff99fce4d25afdaf36747932dda136321",
   "quotes": [
     {
@@ -285,6 +285,10 @@
     {
       "id": "q_0rjp4tj",
       "text": "You’re just a balloon animal filled with thoughts"
+    },
+    {
+      "id": "q_09igojm",
+      "text": "Isn’t your life a single flow?"
     }
   ]
 }
