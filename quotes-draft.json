@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-25T12:00:13.508Z",
+  "updatedAt": "2026-08-27T10:28:18.715Z",
   "baseFileSha": "3fd70d4a2caf1b7ea3e6d94b308913cb2cbcca7b",
   "quotes": [
     {
@@ -289,6 +289,10 @@
     {
       "id": "q_09igojm",
       "text": "Isn’t your life a single flow?"
+    },
+    {
+      "id": "q_1mix0as",
+      "text": "Let go to the flow"
     }
   ]
 }
