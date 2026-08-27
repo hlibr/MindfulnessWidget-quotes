@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-27T10:28:18.715Z",
+  "updatedAt": "2026-08-27T10:46:20.843Z",
   "baseFileSha": "3fd70d4a2caf1b7ea3e6d94b308913cb2cbcca7b",
   "quotes": [
     {
@@ -293,6 +293,10 @@
     {
       "id": "q_1mix0as",
       "text": "Let go to the flow"
+    },
+    {
+      "id": "q_1ql79b1",
+      "text": "There is a level below thought"
     }
   ]
 }
