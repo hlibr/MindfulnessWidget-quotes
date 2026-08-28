@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-28T09:10:25.851Z",
+  "updatedAt": "2026-08-28T15:02:05.484Z",
   "baseFileSha": "c16fe05b2fdbd5a16e48e98a66775bef4e858b62",
   "quotes": [
     {
@@ -305,6 +305,10 @@
     {
       "id": "q_0iebmtw",
       "text": "Accept what might happen"
+    },
+    {
+      "id": "q_0oxkm6l",
+      "text": "Trust your own process"
     }
   ]
 }
