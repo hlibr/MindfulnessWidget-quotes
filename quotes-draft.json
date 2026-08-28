@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-28T15:02:05.484Z",
-  "baseFileSha": "c16fe05b2fdbd5a16e48e98a66775bef4e858b62",
+  "updatedAt": "2026-08-28T15:32:05.691Z",
+  "baseFileSha": "88f30663a6c638a1d8fa34ae28b7fb1691f29235",
   "quotes": [
     {
       "id": "q_0o9mqsh",
@@ -309,6 +309,10 @@
     {
       "id": "q_0oxkm6l",
       "text": "Trust your own process"
+    },
+    {
+      "id": "q_034wtyo",
+      "text": "You’re always here"
     }
   ]
 }
