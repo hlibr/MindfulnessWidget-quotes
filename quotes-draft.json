@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-29T13:34:20.083Z",
+  "updatedAt": "2026-08-29T13:36:00.442Z",
   "baseFileSha": "88f30663a6c638a1d8fa34ae28b7fb1691f29235",
   "quotes": [
     {
@@ -321,6 +321,10 @@
     {
       "id": "q_14vshwz",
       "text": "— How do I do it?\n— No-how."
+    },
+    {
+      "id": "q_19b6719",
+      "text": "How to do something?\nNo-how."
     }
   ]
 }
