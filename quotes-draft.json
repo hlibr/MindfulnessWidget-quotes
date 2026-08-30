@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-30T12:55:31.824Z",
+  "updatedAt": "2026-08-30T14:23:10.179Z",
   "baseFileSha": "ee9446e969bd53e5efb8287397705bff2475e069",
   "quotes": [
     {
@@ -309,6 +309,10 @@
     {
       "id": "q_19b6719",
       "text": "How to do something?\nNo-how."
+    },
+    {
+      "id": "q_1t29bnv",
+      "text": "Allow it to happen"
     }
   ]
 }
