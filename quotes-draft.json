@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-31T00:14:46.581Z",
+  "updatedAt": "2026-08-31T00:21:35.049Z",
   "baseFileSha": "ee9446e969bd53e5efb8287397705bff2475e069",
   "quotes": [
     {
@@ -317,6 +317,10 @@
     {
       "id": "q_09mti6v",
       "text": "Let life take you there"
+    },
+    {
+      "id": "q_181f6gr",
+      "text": "Don’t make decisions, accept decisions that come"
     }
   ]
 }
