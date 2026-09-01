@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-09-01T07:53:14.347Z",
-  "baseFileSha": "df68bd9bffe5fc1682aa530030e8dbb22057d6fa",
+  "updatedAt": "2026-09-01T09:14:34.176Z",
+  "baseFileSha": "693016d74e4a210de5ac4a1159337d6f19713296",
   "quotes": [
     {
       "id": "q_0vjdju0",
@@ -317,6 +317,10 @@
     {
       "id": "q_181f6gr",
       "text": "Don’t make decisions, accept decisions that come"
+    },
+    {
+      "id": "q_1k2lzxy",
+      "text": "Notice your life breathing without you"
     }
   ]
 }
