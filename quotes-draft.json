@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-01T09:14:34.176Z",
+  "updatedAt": "2026-09-01T09:17:17.878Z",
   "baseFileSha": "693016d74e4a210de5ac4a1159337d6f19713296",
   "quotes": [
     {
@@ -321,6 +321,10 @@
     {
       "id": "q_1k2lzxy",
       "text": "Notice your life breathing without you"
+    },
+    {
+      "id": "q_0cbmuft",
+      "text": "Someone is watching you"
     }
   ]
 }
