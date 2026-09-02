@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-02T13:43:34.251Z",
+  "updatedAt": "2026-09-02T18:19:23.994Z",
   "baseFileSha": "333ebd0e86fe43637bfd5179ad1e6fca6faa4456",
   "quotes": [
     {
@@ -329,6 +329,10 @@
     {
       "id": "q_1dzuco5",
       "text": "What happens if you let go of everything?"
+    },
+    {
+      "id": "q_0tx03gh",
+      "text": "From a certain perspective, your life is just a series of breaths"
     }
   ]
 }
