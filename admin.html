@@ -1069,6 +1069,7 @@
         // Pre-compute: sort existing quotes once
         const sortedExisting = existingQuotes.slice().sort((a, b) => a.id.localeCompare(b.id));
         const existingIds = sortedExisting.map(q => q.id);
+        const existingIdsSet = new Set(existingIds);
 
         // Pre-compute baseline
         const baseSeed = computeSourceSeed(existingIds);
@@ -1198,11 +1199,17 @@
               const positionInCycle = daySerial - (cycleNumber * newTotal);
               dayIndices[i] = permBuffers[cycleNumber - firstCycle][positionInCycle];
             }
-            bestScore = preserved;
-            bestId = 'q_zzzz' + currentAttempt.toString(36).padStart(6, '0');
-            bestDayIndices = dayIndices;
-            if (preserved === numDays) break;
+            // Skip if this candidate ID is already taken — keep searching for a free ID
+            // with the same (or better) score. Collision is rare but matters when adding
+            // multiple quotes via bruteforce in a row (search restarts from 0 each time).
+            const candidateId = 'q_zzzz' + currentAttempt.toString(36).padStart(6, '0');
+            if (!existingIdsSet.has(candidateId)) {
+              bestScore = preserved;
+              bestId = candidateId;
+              bestDayIndices = dayIndices;
+            }
           }
+          if (preserved === numDays) break;
 
           currentAttempt++;
 
@@ -1420,6 +1427,10 @@
 
     function acceptBruteforce() {
       if (!bruteforceResult) return;
+      const result = bruteforceResult;
+      // Clear upfront so a double-fire (e.g. Enter on the Accept button itself
+      // triggers both native click and our keydown handler) becomes a no-op.
+      bruteforceResult = null;
 
       // Terminate worker if still running
       if (bruteforceWorker) {
@@ -1429,14 +1440,14 @@
 
       // Add the quote with the bruteforced ID
       quotes.push({
-        id: bruteforceResult.id,
+        id: result.id,
         text: bruteforcePendingText
       });
 
       closeBruteforceModal();
       renderQuotes();
       updateTodayQuote();
-      showToast(`Quote added with stable ID (${bruteforceResult.score}/10 days preserved)`);
+      showToast(`Quote added with stable ID (${result.score}/10 days preserved)`);
 
       // Scroll to bottom
       setTimeout(() => {
@@ -1873,6 +1884,7 @@
       // Pre-compute: sort existing quotes once (new quote will be appended at end)
       const sortedExisting = [...existingQuotes].sort((a, b) => a.id.localeCompare(b.id));
       const existingIds = sortedExisting.map(q => q.id);
+      const existingIdsSet = new Set(existingIds);
 
       // Pre-compute baseline
       const baseSeed = computeSourceSeed(existingIds);
@@ -2021,12 +2033,17 @@
                 const positionInCycle = daySerial - (cycleNumber * newTotal);
                 dayIndices[i] = permBuffers[cycleNumber - firstCycle][positionInCycle];
               }
-              bestScore = preserved;
-              bestId = 'q_zzzz' + currentAttempt.toString(36).padStart(6, '0');
-              bestDayIndices = dayIndices;
-              if (preserved === numDays) {
-                finish();
-                return;
+              // Skip if this candidate ID is already taken — keep searching for a free ID
+              // with the same (or better) score.
+              const candidateId = 'q_zzzz' + currentAttempt.toString(36).padStart(6, '0');
+              if (!existingIdsSet.has(candidateId)) {
+                bestScore = preserved;
+                bestId = candidateId;
+                bestDayIndices = dayIndices;
+                if (preserved === numDays) {
+                  finish();
+                  return;
+                }
               }
             }
           }
