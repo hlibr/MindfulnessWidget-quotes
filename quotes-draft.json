@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-03T04:02:23.273Z",
+  "updatedAt": "2026-09-03T22:31:54.918Z",
   "baseFileSha": "333ebd0e86fe43637bfd5179ad1e6fca6faa4456",
   "quotes": [
     {
@@ -337,6 +337,10 @@
     {
       "id": "q_1h1o1yo",
       "text": "We all come from nowhere"
+    },
+    {
+      "id": "q_zzzz0000al",
+      "text": "There’s no time"
     }
   ]
 }
