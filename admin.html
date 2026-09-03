@@ -675,6 +675,104 @@
       flex: 1;
       min-width: 0;
     }
+
+    /* Bruteforce Modal */
+    .bruteforce-result {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .bruteforce-score {
+      font-size: 24px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .bruteforce-score.perfect {
+      color: var(--success);
+    }
+
+    .bruteforce-score.good {
+      color: var(--warning);
+    }
+
+    .bruteforce-score.poor {
+      color: var(--danger);
+    }
+
+    .bruteforce-comparison {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .comparison-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .comparison-row.changed {
+      background: rgba(239, 68, 68, 0.1);
+      border-left: 3px solid var(--danger);
+    }
+
+    .comparison-row.preserved {
+      border-left: 3px solid var(--success);
+    }
+
+    .comparison-date {
+      font-size: 12px;
+      color: var(--text-dim);
+      min-width: 90px;
+    }
+
+    .comparison-arrow {
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+
+    .comparison-quote {
+      flex: 1;
+      font-size: 13px;
+      white-space: pre-wrap;
+      line-height: 1.3;
+    }
+
+    .comparison-quote.old {
+      color: var(--text-dim);
+      text-decoration: line-through;
+    }
+
+    .comparison-quote.new {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .bruteforce-loading {
+      text-align: center;
+      padding: 40px;
+    }
+
+    .bruteforce-loading .spinner {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 
@@ -778,6 +876,40 @@
   <!-- Toast -->
   <div id="toast" class="toast"></div>
 
+  <!-- Batch Bruteforce Result Modal -->
+  <div id="batchBruteforceModal" class="modal-overlay">
+    <div class="modal" style="max-width: 500px;">
+      <h3>🔍 Finding Stable IDs (Batch)</h3>
+      <div id="batchBruteforceContent">
+        <div class="bruteforce-loading">
+          <div class="spinner"></div>
+          <p style="margin-top: 16px; color: var(--text-dim);">Trying different IDs for <span id="batchCount">0</span> quotes...</p>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="cancelBatchBruteforce()">Cancel</button>
+        <button id="batchBruteforceAcceptBtn" class="btn-success" onclick="acceptBatchBruteforce()" disabled>Use These IDs</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bruteforce Result Modal -->
+  <div id="bruteforceModal" class="modal-overlay">
+    <div class="modal">
+      <h3>🔍 Finding Stable ID</h3>
+      <div id="bruteforceContent">
+        <div class="bruteforce-loading">
+          <div class="spinner"></div>
+          <p style="margin-top: 16px; color: var(--text-dim);">Trying different IDs...</p>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="cancelBruteforce()">Cancel</button>
+        <button id="bruteforceAcceptBtn" class="btn-success" onclick="acceptBruteforce()" disabled>Use This ID</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Config
     const ADMIN_VERSION = '1.1.4+46';
@@ -804,6 +936,12 @@
     let hasChanges = false;
     let draggedIndex = -1;
     let rerollCounts = {}; // Key: "YYYY-MM-DD", Value: count
+    let bruteforceResult = null; // Result of ID search
+    let bruteforcePendingText = ''; // Quote text waiting to be added after bruteforce
+    let bruteforceCancelled = false; // Cancellation flag
+    let batchBruteforceResults = null; // Results for batch add
+    let batchBruteforcePending = []; // Multiple quotes waiting
+    let batchBruteforceCancelled = false; // Cancellation flag
 
     // DOM Elements
     const authSection = document.getElementById('authSection');
@@ -821,6 +959,635 @@
     const toast = document.getElementById('toast');
 
     document.title = `Mindfulness Quotes Admin v${ADMIN_VERSION}`;
+
+    // ================== Web Worker for Bruteforce ====================
+
+    // Create worker from inline code (blob URL)
+    // Optimized: no Date objects in hot loop, pre-computed day serials
+    const workerCode = `
+      // Epoch constant for day serial calculation
+      const EPOCH_MS = Date.UTC(2025, 11, 27);
+      const DAY_MS = 24 * 60 * 60 * 1000;
+
+      function mulberry32(seed) {
+        let state = Math.imul(seed, 0x6D2B79F5) >>> 0;
+        return function () {
+          state = (state + 0x6D2B79F5) >>> 0;
+          let t = state;
+          t = Math.imul(t ^ (t >>> 15), 1 | t);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+      }
+
+      function computeSourceSeed(values) {
+        let hash = 0x811C9DC5 >>> 0;
+        for (const value of values) {
+          for (let i = 0; i < value.length; i++) {
+            hash ^= value.charCodeAt(i);
+            hash = Math.imul(hash, 0x01000193) >>> 0;
+          }
+          hash ^= 0x1F;
+          hash = Math.imul(hash, 0x01000193) >>> 0;
+        }
+        return hash >>> 0;
+      }
+
+      function mixSeed(a, b, c = 0) {
+        let hash = 0x811C9DC5 >>> 0;
+        for (const value of [a, b, c]) {
+          hash ^= (value >>> 0);
+          hash = Math.imul(hash, 0x01000193) >>> 0;
+        }
+        return hash >>> 0;
+      }
+
+      function buildCyclePermutation(totalQuotes, cycleNumber, sourceSeed, previousCycleLast = null) {
+        const values = Array.from({ length: totalQuotes }, (_, index) => index);
+        const rng = mulberry32(mixSeed(sourceSeed, totalQuotes, cycleNumber));
+        for (let i = totalQuotes - 1; i > 0; i--) {
+          const j = Math.floor(rng() * (i + 1));
+          [values[i], values[j]] = [values[j], values[i]];
+        }
+        if (previousCycleLast !== null && totalQuotes > 1 && values[0] === previousCycleLast) {
+          [values[0], values[1]] = [values[1], values[0]];
+        }
+        return values;
+      }
+
+      // Build permutation for a given cycle, with boundary fix
+      function getPermutation(totalQuotes, cycleNumber, sourceSeed) {
+        const previousCycleLast = cycleNumber === 0
+          ? null
+          : buildCyclePermutation(totalQuotes, cycleNumber - 1, sourceSeed)[totalQuotes - 1];
+        return buildCyclePermutation(totalQuotes, cycleNumber, sourceSeed, previousCycleLast);
+      }
+
+      // Get quote index for a pre-computed day serial (no Date allocation).
+      // Mirrors getQuoteIndexForDate in the main thread but operates on integers
+      // to keep the hot loop allocation-free.
+      function getQuoteIndexForDaySerial(daySerial, totalQuotes, sourceSeed) {
+        if (totalQuotes <= 0) return 0;
+        if (totalQuotes === 1) return 0;
+        if (totalQuotes === 2) return (daySerial + (sourceSeed & 1)) % 2;
+        const cycleNumber = Math.floor(daySerial / totalQuotes);
+        const positionInCycle = daySerial - (cycleNumber * totalQuotes);
+        const perm = getPermutation(totalQuotes, cycleNumber, sourceSeed);
+        return perm[positionInCycle];
+      }
+
+// Fast Fisher-Yates into a pre-allocated Int32Array with the mulberry32 RNG
+      // inlined and pre-computed. Skips the cycle-boundary fix because the
+      // bruteforce only reads positions the swap doesn't touch. ~15x faster
+      // than buildCyclePermutation thanks to (a) Int32Array vs Array.from
+      // destructuring swaps, (b) inlined mulberry32 to avoid closure overhead,
+      // (c) bitwise OR for the floor, and (d) split RNG-generation and
+      // swap-loops so the JIT can compile each tightly.
+      function buildCyclePermutationFastInto(totalQuotes, cycleNumber, sourceSeed, out, rngBuf) {
+        // Pass 1: generate swap indices into rngBuf.
+        let state = Math.imul(mixSeed(sourceSeed, totalQuotes, cycleNumber), 0x6D2B79F5) >>> 0;
+        for (let i = totalQuotes - 1; i > 0; i--) {
+          state = (state + 0x6D2B79F5) >>> 0;
+          let t = state;
+          t = Math.imul(t ^ (t >>> 15), 1 | t);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          rngBuf[i] = (((t ^ (t >>> 14)) >>> 0) * (i + 1) / 4294967296) | 0;
+        }
+        // Pass 2: init identity then swap.
+        for (let i = 0; i < totalQuotes; i++) out[i] = i;
+        for (let i = totalQuotes - 1; i > 0; i--) {
+          const j = rngBuf[i];
+          const tmp = out[i]; out[i] = out[j]; out[j] = tmp;
+        }
+        return out;
+      }
+
+      // Main bruteforce function
+      function findStableIdForNewQuote(existingQuotes, newQuoteText, numDays, maxAttempts, reportInterval) {
+        const startTime = performance.now();
+
+        // Pre-compute: sort existing quotes once
+        const sortedExisting = existingQuotes.slice().sort((a, b) => a.id.localeCompare(b.id));
+        const existingIds = sortedExisting.map(q => q.id);
+
+        // Pre-compute baseline
+        const baseSeed = computeSourceSeed(existingIds);
+        const baseTotal = sortedExisting.length;
+        const baseQuotes = sortedExisting.map(q => q.text);
+
+        // Pre-compute day serials ONCE (no Date objects in hot loop!)
+        // Use LOCAL midnight (matches getDaySerial + Dart/Kotlin production).
+        // Window starts at TOMORROW (+1) so the score measures how well the new
+        // quote preserves the schedule from the next day onward, not today.
+        const localEpoch = new Date(2025, 11, 27);
+        localEpoch.setHours(0, 0, 0, 0);
+        const localToday = new Date();
+        localToday.setHours(0, 0, 0, 0);
+        const baseDaySerials = new Array(numDays);
+        const baselineTexts = new Array(numDays);
+        for (let i = 0; i < numDays; i++) {
+          const dayDate = new Date(localToday);
+          dayDate.setDate(localToday.getDate() + i + 1);
+          const daySerial = Math.round((dayDate - localEpoch) / DAY_MS);
+          baseDaySerials[i] = daySerial;
+          const idx = getQuoteIndexForDaySerial(daySerial, baseTotal, baseSeed);
+          baselineTexts[i] = baseQuotes[idx];
+        }
+
+        // Pre-compute base hash state
+        let baseHash = 0x811C9DC5 >>> 0;
+        for (const id of existingIds) {
+          for (let j = 0; j < id.length; j++) {
+            baseHash ^= id.charCodeAt(j);
+            baseHash = Math.imul(baseHash, 0x01000193) >>> 0;
+          }
+          baseHash ^= 0x1F;
+          baseHash = Math.imul(baseHash, 0x01000193) >>> 0;
+        }
+
+        const newTotal = baseTotal + 1;
+        let bestScore = -1;
+        let bestId = null;
+        let bestDayIndices = null;
+        let currentAttempt = 0;
+
+        // Pre-allocate Int32Array buffers for permutation slots, reused every attempt.
+        // Worst case: numDays cycles (each day in its own cycle).
+        const permBuffers = new Array(numDays);
+        const rngBuffers = new Array(numDays);
+        for (let i = 0; i < numDays; i++) {
+          permBuffers[i] = new Int32Array(newTotal);
+          rngBuffers[i] = new Int32Array(newTotal);
+        }
+
+        // FNV pre-fold: hash state after XORing the fixed 'q_zzzz' prefix.
+        // Lets the inner loop hash only the 6 base36 digits of the candidate,
+        // avoiding toString(36).padStart + 12 charCodeAt calls per attempt.
+        let prefixHash = baseHash;
+        const prefix = 'q_zzzz';
+        for (let k = 0; k < prefix.length; k++) {
+          prefixHash ^= prefix.charCodeAt(k);
+          prefixHash = Math.imul(prefixHash, 0x01000193) >>> 0;
+        }
+        const DIGIT_CHARS = new Int32Array(36);
+        for (let d = 0; d < 36; d++) {
+          DIGIT_CHARS[d] = d < 10 ? (0x30 + d) : (0x61 + d - 10);
+        }
+        const digitBuf = new Int32Array(6);
+
+        while (currentAttempt < maxAttempts) {
+          // FNV-fold the 6 base36 digits of currentAttempt into prefixHash.
+          // Avoids building the candidate string + 12 charCodeAt calls per attempt.
+          let n = currentAttempt;
+          for (let k = 5; k >= 0; k--) {
+            digitBuf[k] = DIGIT_CHARS[n % 36];
+            n = (n / 36) | 0;
+          }
+          let hash = prefixHash;
+          for (let k = 0; k < 6; k++) {
+            hash ^= digitBuf[k];
+            hash = Math.imul(hash, 0x01000193) >>> 0;
+          }
+          hash ^= 0x1F;
+          hash = Math.imul(hash, 0x01000193) >>> 0;
+          const newSeed = hash >>> 0;
+
+          // Build permutations for every cycle that any of the days falls into.
+          // Fast Int32Array Fisher-Yates; only do the prev-cycle boundary fix
+          // (swap vals[0] if it equals prev cycle's last) when a window day
+          // actually sits at position 0. See main-thread mirror for details.
+          const firstCycle = Math.floor(baseDaySerials[0] / newTotal);
+          const lastCycle = Math.floor(baseDaySerials[numDays - 1] / newTotal);
+          const permCount = lastCycle - firstCycle + 1;
+          let needsBoundaryFix = false;
+          for (let i = 0; i < numDays; i++) {
+            if (baseDaySerials[i] % newTotal === 0) { needsBoundaryFix = true; break; }
+          }
+          if (!needsBoundaryFix) {
+            for (let c = 0; c < permCount; c++) {
+              buildCyclePermutationFastInto(newTotal, firstCycle + c, newSeed, permBuffers[c], rngBuffers[c]);
+            }
+          } else {
+            for (let c = 0; c < permCount; c++) {
+              const p = getPermutation(newTotal, firstCycle + c, newSeed);
+              for (let k = 0; k < newTotal; k++) permBuffers[c][k] = p[k];
+            }
+          }
+
+          // Check each day using the pre-built permutations
+          let preserved = 0;
+          for (let i = 0; i < numDays; i++) {
+            const daySerial = baseDaySerials[i];
+            const cycleNumber = Math.floor(daySerial / newTotal);
+            const positionInCycle = daySerial - (cycleNumber * newTotal);
+            const idx = permBuffers[cycleNumber - firstCycle][positionInCycle];
+            const newText = idx < baseTotal ? baseQuotes[idx] : newQuoteText;
+            if (newText === baselineTexts[i]) {
+              preserved++;
+            } else {
+              break;
+            }
+          }
+
+          if (preserved > bestScore) {
+            // Re-walk to capture dayIndices now that we know this is the new best.
+            const dayIndices = new Array(preserved);
+            for (let i = 0; i < preserved; i++) {
+              const daySerial = baseDaySerials[i];
+              const cycleNumber = Math.floor(daySerial / newTotal);
+              const positionInCycle = daySerial - (cycleNumber * newTotal);
+              dayIndices[i] = permBuffers[cycleNumber - firstCycle][positionInCycle];
+            }
+            bestScore = preserved;
+            bestId = 'q_zzzz' + currentAttempt.toString(36).padStart(6, '0');
+            bestDayIndices = dayIndices;
+            if (preserved === numDays) break;
+          }
+
+          currentAttempt++;
+
+          // Report progress
+          if (currentAttempt % reportInterval === 0) {
+            self.postMessage({
+              type: 'progress',
+              current: currentAttempt,
+              total: maxAttempts,
+              best: bestScore,
+              bestId: bestId,
+              bestDayIndices: bestDayIndices ? bestDayIndices.slice() : null
+            });
+          }
+        }
+
+        const elapsed = performance.now() - startTime;
+
+        // Build result objects for display
+        const newDays = new Array(numDays);
+        const baselineDays = new Array(numDays);
+        for (let i = 0; i < numDays; i++) {
+          const dayDate = new Date(localToday);
+          dayDate.setDate(localToday.getDate() + i + 1);
+          // Format as local YYYY-MM-DD (NOT toISOString which is UTC-based and
+          // would shift the date by ±1 day for non-UTC users).
+          const dateStr = dayDate.getFullYear() + '-' +
+            String(dayDate.getMonth() + 1).padStart(2, '0') + '-' +
+            String(dayDate.getDate()).padStart(2, '0');
+          const baseIdx = getQuoteIndexForDaySerial(baseDaySerials[i], baseTotal, baseSeed);
+          baselineDays[i] = { date: dateStr, quote: sortedExisting[baseIdx], index: baseIdx };
+          const newIdx = bestDayIndices ? bestDayIndices[i] : baseIdx;
+          const newQuote = newIdx < baseTotal ? sortedExisting[newIdx] : { id: bestId, text: newQuoteText };
+          newDays[i] = { date: dateStr, quote: newQuote, index: newIdx };
+        }
+
+        return {
+          id: bestId,
+          score: bestScore,
+          daysPreserved: bestScore,
+          baselineDays,
+          newDays,
+          elapsedMs: elapsed,
+          attempts: currentAttempt
+        };
+      }
+
+      // Handle messages from main thread
+      self.onmessage = function(e) {
+        try {
+          const { existingQuotes, newQuoteText, numDays, maxAttempts, reportInterval } = e.data;
+          const result = findStableIdForNewQuote(existingQuotes, newQuoteText, numDays, maxAttempts, reportInterval);
+          self.postMessage({ type: 'complete', result });
+        } catch (err) {
+          self.postMessage({ type: 'error', message: err.message });
+        }
+      };
+    `;
+
+    let bruteforceWorker = null;
+
+    function getWorker() {
+      if (!bruteforceWorker) {
+        const blob = new Blob([workerCode], { type: 'application/javascript' });
+        const url = URL.createObjectURL(blob);
+        bruteforceWorker = new Worker(url);
+      }
+      return bruteforceWorker;
+    }
+
+    // ================== Bruteforce Modal Functions ==================
+
+    function openBruteforceModal(text) {
+      bruteforcePendingText = text;
+      bruteforceResult = null;
+      document.getElementById('bruteforceModal').classList.add('active');
+      document.getElementById('bruteforceAcceptBtn').disabled = true;
+      runBruteforceSearch();
+    }
+
+    function runBruteforceSearch() {
+      bruteforceCancelled = false;
+      const content = document.getElementById('bruteforceContent');
+      content.innerHTML = `
+        <div class="bruteforce-loading">
+          <div class="spinner"></div>
+          <p style="margin-top: 16px; color: var(--text-dim);">Trying different IDs (Web Worker)...</p>
+          <p id="bruteforceProgress" style="font-size: 12px; color: var(--text-dim); margin-top: 8px;">0 / 100,000,000</p>
+        </div>
+      `;
+
+      const worker = getWorker();
+
+      // Handle messages from worker
+      worker.onmessage = function(e) {
+        const msg = e.data;
+        if (msg.type === 'progress') {
+          const progressEl = document.getElementById('bruteforceProgress');
+          if (progressEl && !bruteforceCancelled) {
+            progressEl.textContent = `${msg.current.toLocaleString()} / ${msg.total.toLocaleString()} (best: ${msg.best}/10 days)`;
+            // Enable accept button as soon as we have any result
+            if (msg.best >= 0) {
+              document.getElementById('bruteforceAcceptBtn').disabled = false;
+              // Store partial result so "Use This ID" works during search
+              bruteforceResult = {
+                id: msg.bestId,
+                score: msg.best,
+                daysPreserved: msg.best,
+                earlyExit: true
+              };
+            }
+          }
+        } else if (msg.type === 'complete') {
+          if (!bruteforceCancelled) {
+            bruteforceResult = msg.result;
+            renderBruteforceResult(msg.result);
+            document.getElementById('bruteforceAcceptBtn').disabled = false;
+          }
+        } else if (msg.type === 'error') {
+          bruteforceCancelled = true;
+          const content = document.getElementById('bruteforceContent');
+          content.innerHTML = `<div style="color: var(--danger); padding: 20px;">Error: ${msg.message}</div>`;
+          showToast('Bruteforce failed: ' + msg.message, 'error');
+        }
+      };
+
+      // Handle worker errors
+      worker.onerror = function(err) {
+        bruteforceCancelled = true;
+        const content = document.getElementById('bruteforceContent');
+        content.innerHTML = `<div style="color: var(--danger); padding: 20px;">Worker error: ${err.message}</div>`;
+        showToast('Worker error: ' + err.message, 'error');
+      };
+
+      // Start the worker
+      worker.postMessage({
+        existingQuotes: quotes,
+        newQuoteText: bruteforcePendingText,
+        numDays: 10,
+        maxAttempts: 100000000,
+        reportInterval: 10000
+      });
+    }
+
+    function renderBruteforceResult(result) {
+      const content = document.getElementById('bruteforceContent');
+      const maxAttempts = 100000000;
+      const scoreClass = result.score >= 8 ? 'perfect' : result.score >= 5 ? 'good' : 'poor';
+      const scoreText = result.score >= 10
+        ? '✓ Perfect! All 10 days preserved'
+        : result.score >= 8
+          ? `✓ ${result.score}/10 days preserved`
+          : result.score >= 5
+            ? `⚠ ${result.score}/10 days preserved`
+            : `✗ Only ${result.score}/10 days preserved`;
+
+      let comparisonHtml = '';
+      for (let i = 0; i < Math.min(result.baselineDays.length, 10); i++) {
+        const baseline = result.baselineDays[i];
+        const newDay = result.newDays[i];
+        const preserved = newDay.quote.text === baseline.quote.text;
+        // Parse YYYY-MM-DD as local midnight (new Date("YYYY-MM-DD") is UTC,
+        // which shifts the displayed date by ±1 day for non-UTC users).
+        const [y, m, d] = baseline.date.split('-').map(Number);
+        const date = new Date(y, m - 1, d);
+        const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+        comparisonHtml += `
+          <div class="comparison-row ${preserved ? 'preserved' : 'changed'}">
+            <span class="comparison-date">${dateStr}</span>
+            ${preserved
+              ? `<span class="comparison-quote">${escapeHtml(baseline.quote.text)}</span>`
+              : `<span class="comparison-quote old">${escapeHtml(baseline.quote.text)}</span>
+                 <span class="comparison-arrow">→</span>
+                 <span class="comparison-quote new">${escapeHtml(newDay.quote.text)}</span>`
+            }
+          </div>
+        `;
+      }
+
+      const elapsedSec = result.elapsedMs ? (result.elapsedMs / 1000).toFixed(1) : '?';
+      const attemptsStr = result.attempts ? result.attempts.toLocaleString() : maxAttempts.toLocaleString();
+
+      content.innerHTML = `
+        <div class="bruteforce-result">
+          <div class="bruteforce-score ${scoreClass}">${scoreText}</div>
+          <div style="font-size: 12px; color: var(--text-dim); text-align: center; margin-bottom: 8px;">
+            Best ID found: <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">${result.id}</code>
+          </div>
+          <div style="font-size: 11px; color: var(--text-dim); text-align: center; margin-bottom: 16px;">
+            ${attemptsStr} attempts in ${elapsedSec}s
+          </div>
+          <div class="bruteforce-comparison">
+            ${comparisonHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    function acceptBruteforce() {
+      if (!bruteforceResult) return;
+
+      // Terminate worker if still running
+      if (bruteforceWorker) {
+        bruteforceWorker.terminate();
+        bruteforceWorker = null;
+      }
+
+      // Add the quote with the bruteforced ID
+      quotes.push({
+        id: bruteforceResult.id,
+        text: bruteforcePendingText
+      });
+
+      closeBruteforceModal();
+      renderQuotes();
+      updateTodayQuote();
+      showToast(`Quote added with stable ID (${bruteforceResult.score}/10 days preserved)`);
+
+      // Scroll to bottom
+      setTimeout(() => {
+        quoteList.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+
+    function cancelBruteforce() {
+      bruteforceCancelled = true;
+      // Terminate and recreate worker to stop computation immediately
+      if (bruteforceWorker) {
+        bruteforceWorker.terminate();
+        bruteforceWorker = null;
+      }
+      closeBruteforceModal();
+      showToast('Quote addition cancelled');
+    }
+
+    function closeBruteforceModal() {
+      document.getElementById('bruteforceModal').classList.remove('active');
+      bruteforceResult = null;
+      bruteforcePendingText = '';
+    }
+
+    // ================== Batch Bruteforce Functions ==================
+
+    function openBatchBruteforceModal(texts) {
+      batchBruteforcePending = texts;
+      batchBruteforceResults = null;
+      document.getElementById('batchCount').textContent = texts.length;
+      document.getElementById('batchBruteforceModal').classList.add('active');
+      document.getElementById('batchBruteforceAcceptBtn').disabled = true;
+      runBatchBruteforceSearch();
+    }
+
+    async function runBatchBruteforceSearch() {
+      batchBruteforceCancelled = false;
+      const content = document.getElementById('batchBruteforceContent');
+      content.innerHTML = `
+        <div class="bruteforce-loading">
+          <div class="spinner"></div>
+          <p style="margin-top: 16px; color: var(--text-dim);">Trying different IDs for ${batchBruteforcePending.length} quotes...</p>
+          <p id="batchBruteforceProgress" style="font-size: 12px; color: var(--text-dim); margin-top: 8px;">Processing quote 1...</p>
+        </div>
+      `;
+
+      // For batch, bruteforce each quote sequentially
+      const results = [];
+      let currentQuotes = [...quotes];
+      const baselineDays = computeDaysAhead(currentQuotes, 10);
+
+      for (let i = 0; i < batchBruteforcePending.length; i++) {
+        if (batchBruteforceCancelled) break;
+
+        const text = batchBruteforcePending[i];
+        const progressEl = document.getElementById('batchBruteforceProgress');
+        if (progressEl) {
+          progressEl.textContent = `Processing quote ${i + 1} of ${batchBruteforcePending.length}...`;
+        }
+
+        const result = await findStableIdForNewQuote(currentQuotes, text, {
+          numDays: 10,
+          maxAttempts: 500000,
+          isCancelled: () => batchBruteforceCancelled
+        });
+        results.push(result);
+        currentQuotes = [...currentQuotes, { id: result.id, text: text }];
+      }
+
+      if (batchBruteforceCancelled) return;
+
+      // Compute overall score
+      const finalDays = computeDaysAhead(currentQuotes, 10);
+      let totalPreserved = 0;
+      for (let i = 0; i < 10; i++) {
+        if (finalDays[i].quote.text === baselineDays[i].quote.text) {
+          totalPreserved++;
+        }
+      }
+
+      batchBruteforceResults = {
+        quotes: currentQuotes.slice(quotes.length),
+        totalPreserved,
+        baselineDays,
+        finalDays
+      };
+
+      renderBatchBruteforceResult(batchBruteforceResults);
+      document.getElementById('batchBruteforceAcceptBtn').disabled = false;
+    }
+
+    function renderBatchBruteforceResult(results) {
+      const content = document.getElementById('batchBruteforceContent');
+      const scoreClass = results.totalPreserved >= 8 ? 'perfect' : results.totalPreserved >= 5 ? 'good' : 'poor';
+      const scoreText = results.totalPreserved >= 10
+        ? '✓ Perfect! All 10 days preserved'
+        : `${results.totalPreserved}/10 days preserved`;
+
+      let comparisonHtml = '';
+      for (let i = 0; i < Math.min(results.baselineDays.length, 10); i++) {
+        const baseline = results.baselineDays[i];
+        const final = results.finalDays[i];
+        const preserved = final.quote.text === baseline.quote.text;
+        // Parse YYYY-MM-DD as local midnight (see single-quote renderer).
+        const [y, m, d] = baseline.date.split('-').map(Number);
+        const date = new Date(y, m - 1, d);
+        const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+        comparisonHtml += `
+          <div class="comparison-row ${preserved ? 'preserved' : 'changed'}">
+            <span class="comparison-date">${dateStr}</span>
+            ${preserved
+              ? `<span class="comparison-quote">${escapeHtml(baseline.quote.text)}</span>`
+              : `<span class="comparison-quote old">${escapeHtml(baseline.quote.text)}</span>
+                 <span class="comparison-arrow">→</span>
+                 <span class="comparison-quote new">${escapeHtml(final.quote.text)}</span>`
+            }
+          </div>
+        `;
+      }
+
+      const addedQuotesHtml = results.quotes.map((q, i) =>
+        `<div style="padding: 8px; background: rgba(0,0,0,0.2); border-radius: 6px; margin-bottom: 4px; font-size: 13px;">
+          ${i + 1}. ${escapeHtml(q.text).substring(0, 60)}${q.text.length > 60 ? '...' : ''}
+          <code style="font-size: 11px; color: var(--text-dim); margin-left: 8px;">${q.id}</code>
+        </div>`
+      ).join('');
+
+      content.innerHTML = `
+        <div class="bruteforce-result">
+          <div class="bruteforce-score ${scoreClass}">${scoreText}</div>
+          <div style="font-size: 13px; margin-bottom: 12px;">
+            <strong>Added ${results.quotes.length} quotes:</strong>
+          </div>
+          <div style="max-height: 120px; overflow-y: auto; margin-bottom: 16px;">
+            ${addedQuotesHtml}
+          </div>
+          <div class="bruteforce-comparison">
+            <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 8px;">10-day schedule:</div>
+            ${comparisonHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    function acceptBatchBruteforce() {
+      if (!batchBruteforceResults) return;
+
+      quotes.push(...batchBruteforceResults.quotes);
+
+      closeBatchBruteforceModal();
+      renderQuotes();
+      updateTodayQuote();
+      showToast(`Added ${batchBruteforceResults.quotes.length} quotes (${batchBruteforceResults.totalPreserved}/10 days preserved)`);
+    }
+
+    function cancelBatchBruteforce() {
+      batchBruteforceCancelled = true;
+      closeBatchBruteforceModal();
+      showToast('Batch addition cancelled');
+    }
+
+    function closeBatchBruteforceModal() {
+      document.getElementById('batchBruteforceModal').classList.remove('active');
+      batchBruteforceResults = null;
+      batchBruteforcePending = [];
+    }
 
     // Init
     document.addEventListener('DOMContentLoaded', () => {
@@ -1044,6 +1811,258 @@
       updateChangesState();
     }
 
+    // ================== Bruteforce ID Search for Stable Additions ==================
+
+    /**
+     * Compute quotes for the next N days from a given quote list.
+     * Returns array of { date, quote } objects.
+     */
+    function computeDaysAhead(quoteList, numDays) {
+      const scheduled = [...quoteList].sort((a, b) => a.id.localeCompare(b.id));
+      const sourceSeed = computeSourceSeed(scheduled.map(q => q.id));
+      const result = [];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      for (let i = 0; i < numDays; i++) {
+        const date = new Date(today);
+        date.setDate(date.getDate() + i);
+        const index = getQuoteIndexForDate(date, scheduled.length, 0, sourceSeed);
+        // Local YYYY-MM-DD (NOT toISOString; that would be UTC).
+        const dateStr = date.getFullYear() + '-' +
+          String(date.getMonth() + 1).padStart(2, '0') + '-' +
+          String(date.getDate()).padStart(2, '0');
+        result.push({
+          date: dateStr,
+          quote: scheduled[index],
+          index: index
+        });
+      }
+      return result;
+    }
+
+    /**
+     * Bruteforce search for a new quote ID that maximizes days preserved.
+     * Optimized version - avoids sorting, array allocation, and redundant computation.
+     */
+    function findStableIdForNewQuote(existingQuotes, newQuoteText, options = {}) {
+      const {
+        numDays = 10,
+        maxAttempts = 100000000,
+        onProgress = null,
+        isCancelled = () => false
+      } = options;
+
+      const startTime = performance.now();
+
+      // Pre-compute: sort existing quotes once (new quote will be appended at end)
+      const sortedExisting = [...existingQuotes].sort((a, b) => a.id.localeCompare(b.id));
+      const existingIds = sortedExisting.map(q => q.id);
+
+      // Pre-compute baseline
+      const baseSeed = computeSourceSeed(existingIds);
+      const baseTotal = sortedExisting.length;
+      const baseQuotes = sortedExisting.map(q => q.text);
+
+      // Pre-compute day serials ONCE (no Date objects in hot loop!)
+      // Use LOCAL midnight (matches getDaySerial + Dart/Kotlin production).
+      // Window starts at TOMORROW (+1) so the score measures how well the new
+      // quote preserves the schedule from the next day onward, not today.
+      const localEpoch = new Date(2025, 11, 27);
+      localEpoch.setHours(0, 0, 0, 0);
+      const localToday = new Date();
+      localToday.setHours(0, 0, 0, 0);
+      const baseDaySerials = new Array(numDays);
+      const baselineTexts = new Array(numDays);
+      for (let i = 0; i < numDays; i++) {
+        const dayDate = new Date(localToday);
+        dayDate.setDate(localToday.getDate() + i + 1);
+        const daySerial = Math.round((dayDate - localEpoch) / 86400000);
+        baseDaySerials[i] = daySerial;
+        const idx = getQuoteIndexForDaySerial(daySerial, baseTotal, baseSeed);
+        baselineTexts[i] = baseQuotes[idx];
+      }
+
+      // Pre-compute base hash state
+      // seed = FNV(existingIds) XOR FNV(candidateId) XOR 0x1F
+      // So we can compute base hash state and add candidate contribution
+      let baseHash = 0x811C9DC5 >>> 0;
+      for (const id of existingIds) {
+        for (let j = 0; j < id.length; j++) {
+          baseHash ^= id.charCodeAt(j);
+          baseHash = Math.imul(baseHash, 0x01000193) >>> 0;
+        }
+        baseHash ^= 0x1F;
+        baseHash = Math.imul(baseHash, 0x01000193) >>> 0;
+      }
+      // baseHash now contains hash AFTER all existing IDs (including their 0x1F separators)
+
+      const newTotal = baseTotal + 1;
+      let bestScore = -1;
+      let bestId = null;
+      let bestDayIndices = null;
+      let currentAttempt = 0;
+      const chunkSize = 500000;
+
+      // Pre-allocate Int32Array buffers for permutation slots, reused every attempt.
+      // Worst case: numDays cycles (each day in its own cycle).
+      const permBuffers = new Array(numDays);
+      const rngBuffers = new Array(numDays);
+      for (let i = 0; i < numDays; i++) {
+        permBuffers[i] = new Int32Array(newTotal);
+        rngBuffers[i] = new Int32Array(newTotal);
+      }
+
+      // FNV pre-fold: hash state after XORing the fixed 'q_zzzz' prefix.
+      // Lets the inner loop hash only the 6 base36 digits of the candidate,
+      // avoiding toString(36).padStart + 12 charCodeAt calls per attempt.
+      let prefixHash = baseHash;
+      const prefix = 'q_zzzz';
+      for (let k = 0; k < prefix.length; k++) {
+        prefixHash ^= prefix.charCodeAt(k);
+        prefixHash = Math.imul(prefixHash, 0x01000193) >>> 0;
+      }
+      const DIGIT_CHARS = new Int32Array(36);
+      for (let d = 0; d < 36; d++) {
+        DIGIT_CHARS[d] = d < 10 ? (0x30 + d) : (0x61 + d - 10);
+      }
+      const digitBuf = new Int32Array(6);
+
+      return new Promise((resolve) => {
+        function processChunk() {
+          if (isCancelled()) {
+            finish();
+            return;
+          }
+
+          const end = Math.min(currentAttempt + chunkSize, maxAttempts);
+
+          for (; currentAttempt < end; currentAttempt++) {
+            // FNV-fold the 6 base36 digits of currentAttempt into prefixHash.
+            let n = currentAttempt;
+            for (let k = 5; k >= 0; k--) {
+              digitBuf[k] = DIGIT_CHARS[n % 36];
+              n = (n / 36) | 0;
+            }
+            let hash = prefixHash;
+            for (let k = 0; k < 6; k++) {
+              hash ^= digitBuf[k];
+              hash = Math.imul(hash, 0x01000193) >>> 0;
+            }
+            hash ^= 0x1F;
+            hash = Math.imul(hash, 0x01000193) >>> 0;
+            const newSeed = hash >>> 0;
+
+            // Build permutations for every cycle that any of the days falls into,
+            // using the fast Int32Array Fisher-Yates. The boundary fix (swap
+            // vals[0] with vals[1] if it equals previousCycleLast) only matters
+            // when a day sits at position 0 of its cycle. Detect whether any of
+            // our window days need it; if so, fall back to the slow path that
+            // does the previous-cycle lookup. This keeps the fast path for the
+            // common case (numDays < newTotal) while staying bit-exact with
+            // production for the multi-cycle case.
+            const firstCycle = Math.floor(baseDaySerials[0] / newTotal);
+            const lastCycle = Math.floor(baseDaySerials[numDays - 1] / newTotal);
+            const permCount = lastCycle - firstCycle + 1;
+            let needsBoundaryFix = false;
+            for (let i = 0; i < numDays; i++) {
+              if (baseDaySerials[i] % newTotal === 0) { needsBoundaryFix = true; break; }
+            }
+            if (!needsBoundaryFix) {
+              // Fast path: no day at position 0, swap is irrelevant.
+              for (let c = 0; c < permCount; c++) {
+                buildCyclePermutationFastInto(newTotal, firstCycle + c, newSeed, permBuffers[c], rngBuffers[c]);
+              }
+            } else {
+              // Slow path: bit-exact with production (for multi-cycle windows).
+              // getPermutation internally builds prev cycle + applies swap.
+              for (let c = 0; c < permCount; c++) {
+                const p = getPermutation(newTotal, firstCycle + c, newSeed);
+                for (let k = 0; k < newTotal; k++) permBuffers[c][k] = p[k];
+              }
+            }
+
+            // Check each day using the pre-built permutations
+            let preserved = 0;
+            for (let i = 0; i < numDays; i++) {
+              const daySerial = baseDaySerials[i];
+              const cycleNumber = Math.floor(daySerial / newTotal);
+              const positionInCycle = daySerial - (cycleNumber * newTotal);
+              const idx = permBuffers[cycleNumber - firstCycle][positionInCycle];
+              const newText = idx < baseTotal ? baseQuotes[idx] : newQuoteText;
+              if (newText === baselineTexts[i]) {
+                preserved++;
+              } else {
+                break;
+              }
+            }
+
+            if (preserved > bestScore) {
+              // Re-walk to capture dayIndices now that we know this is the new best.
+              const dayIndices = new Array(preserved);
+              for (let i = 0; i < preserved; i++) {
+                const daySerial = baseDaySerials[i];
+                const cycleNumber = Math.floor(daySerial / newTotal);
+                const positionInCycle = daySerial - (cycleNumber * newTotal);
+                dayIndices[i] = permBuffers[cycleNumber - firstCycle][positionInCycle];
+              }
+              bestScore = preserved;
+              bestId = 'q_zzzz' + currentAttempt.toString(36).padStart(6, '0');
+              bestDayIndices = dayIndices;
+              if (preserved === numDays) {
+                finish();
+                return;
+              }
+            }
+          }
+
+          if (onProgress) {
+            onProgress(currentAttempt, maxAttempts, bestScore);
+          }
+
+          if (currentAttempt < maxAttempts && !isCancelled()) {
+            requestAnimationFrame(processChunk);
+          } else {
+            finish();
+          }
+        }
+
+        function finish() {
+          const elapsed = performance.now() - startTime;
+
+          // Build result objects for display
+          const newDays = new Array(numDays);
+          const baselineDays = new Array(numDays);
+          for (let i = 0; i < numDays; i++) {
+            const dayDate = new Date(localToday);
+            dayDate.setDate(localToday.getDate() + i + 1);
+            // Format as local YYYY-MM-DD (NOT toISOString which is UTC-based and
+            // would shift the date by ±1 day for non-UTC users).
+            const dateStr = dayDate.getFullYear() + '-' +
+              String(dayDate.getMonth() + 1).padStart(2, '0') + '-' +
+              String(dayDate.getDate()).padStart(2, '0');
+            const baseIdx = getQuoteIndexForDaySerial(baseDaySerials[i], baseTotal, baseSeed);
+            baselineDays[i] = { date: dateStr, quote: sortedExisting[baseIdx], index: baseIdx };
+            const newIdx = bestDayIndices ? bestDayIndices[i] : baseIdx;
+            const newQuote = newIdx < baseTotal ? sortedExisting[newIdx] : { id: bestId, text: newQuoteText };
+            newDays[i] = { date: dateStr, quote: newQuote, index: newIdx };
+          }
+
+          resolve({
+            id: bestId,
+            score: bestScore,
+            daysPreserved: bestScore,
+            baselineDays,
+            newDays,
+            elapsedMs: elapsed,
+            attempts: currentAttempt
+          });
+        }
+
+        processChunk();
+      });
+    }
+
     // ================== Per-Cycle Shuffle Quote Selection ==================
 
     /**
@@ -1106,6 +2125,54 @@
       }
 
       return values;
+    }
+
+// Fast Fisher-Yates into a pre-allocated Int32Array with the mulberry32 RNG
+      // inlined and pre-computed. Skips the cycle-boundary fix because the
+      // bruteforce only reads positions the swap doesn't touch. ~15x faster
+      // than buildCyclePermutation thanks to (a) Int32Array vs Array.from
+      // destructuring swaps, (b) inlined mulberry32 to avoid closure overhead,
+      // (c) bitwise OR for the floor, and (d) split RNG-generation and
+      // swap-loops so the JIT can compile each tightly.
+      function buildCyclePermutationFastInto(totalQuotes, cycleNumber, sourceSeed, out, rngBuf) {
+        // Pass 1: generate swap indices into rngBuf.
+        let state = Math.imul(mixSeed(sourceSeed, totalQuotes, cycleNumber), 0x6D2B79F5) >>> 0;
+        for (let i = totalQuotes - 1; i > 0; i--) {
+          state = (state + 0x6D2B79F5) >>> 0;
+          let t = state;
+          t = Math.imul(t ^ (t >>> 15), 1 | t);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          rngBuf[i] = (((t ^ (t >>> 14)) >>> 0) * (i + 1) / 4294967296) | 0;
+        }
+        // Pass 2: init identity then swap.
+        for (let i = 0; i < totalQuotes; i++) out[i] = i;
+        for (let i = totalQuotes - 1; i > 0; i--) {
+          const j = rngBuf[i];
+          const tmp = out[i]; out[i] = out[j]; out[j] = tmp;
+        }
+        return out;
+      }
+
+    // Build permutation for a given cycle, with boundary fix.
+    // Mirrors getPermutation in the bruteforce worker (worker code is inlined).
+    function getPermutation(totalQuotes, cycleNumber, sourceSeed) {
+      const previousCycleLast = cycleNumber === 0
+        ? null
+        : buildCyclePermutation(totalQuotes, cycleNumber - 1, sourceSeed)[totalQuotes - 1];
+      return buildCyclePermutation(totalQuotes, cycleNumber, sourceSeed, previousCycleLast);
+    }
+
+    // Get quote index for a pre-computed day serial (no Date allocation).
+    // Mirror of the worker's getQuoteIndexForDaySerial — kept textually identical
+    // so future algorithm changes apply to both. Edit both copies together.
+    function getQuoteIndexForDaySerial(daySerial, totalQuotes, sourceSeed) {
+      if (totalQuotes <= 0) return 0;
+      if (totalQuotes === 1) return 0;
+      if (totalQuotes === 2) return (daySerial + (sourceSeed & 1)) % 2;
+      const cycleNumber = Math.floor(daySerial / totalQuotes);
+      const positionInCycle = daySerial - (cycleNumber * totalQuotes);
+      const perm = getPermutation(totalQuotes, cycleNumber, sourceSeed);
+      return perm[positionInCycle];
     }
 
     function getQuoteIndexForDate(date, totalQuotes, rerollCount = 0, sourceSeed = 0) {
@@ -1349,16 +2416,8 @@
       // Convert literal \n to actual newlines
       text = text.replace(/\\n/g, '\n');
 
-      quotes.push(createQuote(text));
       input.value = '';
-      renderQuotes();
-      updateTodayQuote();
-      showToast('Quote added');
-
-      // Scroll to bottom
-      setTimeout(() => {
-        quoteList.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+      openBruteforceModal(text);
     }
 
     // ... rest of file (batch add, delete, drag/drop etc matches original)
@@ -1370,11 +2429,15 @@
       const lines = input.value.split('\n').map(l => l.trim().replace(/\\n/g, '\n')).filter(l => l);
       if (lines.length === 0) return;
 
-      quotes.push(...lines.map(createQuote));
       input.value = '';
-      renderQuotes();
-      updateTodayQuote();
-      showToast(`Added ${lines.length} quotes`);
+      // For batch, we'll bruteforce the first one then add rest normally
+      // (batch bruteforce for all would be too slow)
+      if (lines.length === 1) {
+        openBruteforceModal(lines[0]);
+      } else {
+        // Add all at once, then find stable IDs for all of them
+        openBatchBruteforceModal(lines);
+      }
     }
 
     function addBottomQuote() {
@@ -1385,11 +2448,8 @@
       // Convert literal \n to actual newlines
       text = text.replace(/\\n/g, '\n');
 
-      quotes.push(createQuote(text));
       input.value = '';
-      renderQuotes();
-      updateTodayQuote();
-      showToast('Quote added');
+      openBruteforceModal(text);
     }
 
     // Delete
