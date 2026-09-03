@@ -1283,6 +1283,22 @@
       runBruteforceSearch();
     }
 
+    // While the bruteforce modal is open, Enter accepts and Esc cancels.
+    document.addEventListener('keydown', (e) => {
+      if (e.isComposing) return;
+      const modal = document.getElementById('bruteforceModal');
+      if (!modal.classList.contains('active')) return;
+      if (e.key === 'Enter') {
+        const btn = document.getElementById('bruteforceAcceptBtn');
+        if (btn.disabled) return;
+        e.preventDefault();
+        acceptBruteforce();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        cancelBruteforce();
+      }
+    });
+
     function runBruteforceSearch() {
       bruteforceCancelled = false;
       const content = document.getElementById('bruteforceContent');
@@ -1436,7 +1452,6 @@
         bruteforceWorker = null;
       }
       closeBruteforceModal();
-      showToast('Quote addition cancelled');
     }
 
     function closeBruteforceModal() {
