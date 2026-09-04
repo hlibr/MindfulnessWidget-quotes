@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-03T22:31:54.918Z",
+  "updatedAt": "2026-09-04T13:13:58.868Z",
   "baseFileSha": "333ebd0e86fe43637bfd5179ad1e6fca6faa4456",
   "quotes": [
     {
@@ -341,6 +341,10 @@
     {
       "id": "q_zzzz0000al",
       "text": "There’s no time"
+    },
+    {
+      "id": "q_zzzz0002en",
+      "text": "When everything is one, what is left?"
     }
   ]
 }
