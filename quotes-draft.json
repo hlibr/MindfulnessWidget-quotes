@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-05T14:19:44.371Z",
+  "updatedAt": "2026-09-07T13:10:10.838Z",
   "baseFileSha": "fa70735d37a43fd9a4911594f70bb11f4bf8694a",
   "quotes": [
     {
@@ -353,6 +353,10 @@
     {
       "id": "q_zzzz006p8t",
       "text": "Just breathe mindfully"
+    },
+    {
+      "id": "q_zzzz00tb4y",
+      "text": "There's no home like here"
     }
   ]
 }
