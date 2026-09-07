@@ -779,7 +779,7 @@
 <body>
   <header>
     <div class="header-row">
-      <h1>📿 Quotes Admin v1.1.4+46</h1>
+      <h1>📿 Quotes Admin v1.2.4+56</h1>
       <span id="status" class="status">Not Connected</span>
     </div>
   </header>
@@ -912,7 +912,7 @@
 
   <script>
     // Config
-    const ADMIN_VERSION = '1.1.4+46';
+    const ADMIN_VERSION = '1.2.4+56';
     const REPO_OWNER = 'hlibr';
     const REPO_NAME = 'MindfulnessWidget-quotes';
     const FILE_PATH = 'quotes.json';
@@ -968,6 +968,14 @@
       // Epoch constant for day serial calculation
       const EPOCH_MS = Date.UTC(2025, 11, 27);
       const DAY_MS = 24 * 60 * 60 * 1000;
+
+      // Code-unit ID comparison (NOT localeCompare): matches the production
+      // sort order (Dart String.compareTo / Kotlin compareTo) on every machine
+      // regardless of browser language. Keep in sync with the main-thread copy.
+      function compareIds(a, b) {
+        const x = a.id, y = b.id;
+        return x < y ? -1 : x > y ? 1 : 0;
+      }
 
       function mulberry32(seed) {
         let state = Math.imul(seed, 0x6D2B79F5) >>> 0;
@@ -1067,7 +1075,7 @@
         const startTime = performance.now();
 
         // Pre-compute: sort existing quotes once
-        const sortedExisting = existingQuotes.slice().sort((a, b) => a.id.localeCompare(b.id));
+        const sortedExisting = existingQuotes.slice().sort(compareIds);
         const existingIds = sortedExisting.map(q => q.id);
         const existingIdsSet = new Set(existingIds);
 
@@ -1155,14 +1163,17 @@
 
           // Build permutations for every cycle that any of the days falls into.
           // Fast Int32Array Fisher-Yates; only do the prev-cycle boundary fix
-          // (swap vals[0] if it equals prev cycle's last) when a window day
-          // actually sits at position 0. See main-thread mirror for details.
+          // (swap vals[0] with vals[1] if it equals prev cycle's last) when a
+          // window day actually sits at position 0 or 1 — the swap changes
+          // both slots. See main-thread mirror for details.
           const firstCycle = Math.floor(baseDaySerials[0] / newTotal);
           const lastCycle = Math.floor(baseDaySerials[numDays - 1] / newTotal);
           const permCount = lastCycle - firstCycle + 1;
           let needsBoundaryFix = false;
           for (let i = 0; i < numDays; i++) {
-            if (baseDaySerials[i] % newTotal === 0) { needsBoundaryFix = true; break; }
+            // Position computed exactly like the read path below.
+            const s = baseDaySerials[i];
+            if (s - Math.floor(s / newTotal) * newTotal <= 1) { needsBoundaryFix = true; break; }
           }
           if (!needsBoundaryFix) {
             for (let c = 0; c < permCount; c++) {
@@ -1192,8 +1203,10 @@
 
           if (preserved > bestScore) {
             // Re-walk to capture dayIndices now that we know this is the new best.
-            const dayIndices = new Array(preserved);
-            for (let i = 0; i < preserved; i++) {
+            // Capture the FULL window (not just the preserved prefix) so the
+            // result preview shows the true schedule for every day.
+            const dayIndices = new Array(numDays);
+            for (let i = 0; i < numDays; i++) {
               const daySerial = baseDaySerials[i];
               const cycleNumber = Math.floor(daySerial / newTotal);
               const positionInCycle = daySerial - (cycleNumber * newTotal);
@@ -1844,7 +1857,7 @@
      * Returns array of { date, quote } objects.
      */
     function computeDaysAhead(quoteList, numDays) {
-      const scheduled = [...quoteList].sort((a, b) => a.id.localeCompare(b.id));
+      const scheduled = [...quoteList].sort(compareIds);
       const sourceSeed = computeSourceSeed(scheduled.map(q => q.id));
       const result = [];
       const today = new Date();
@@ -1882,7 +1895,7 @@
       const startTime = performance.now();
 
       // Pre-compute: sort existing quotes once (new quote will be appended at end)
-      const sortedExisting = [...existingQuotes].sort((a, b) => a.id.localeCompare(b.id));
+      const sortedExisting = [...existingQuotes].sort(compareIds);
       const existingIds = sortedExisting.map(q => q.id);
       const existingIdsSet = new Set(existingIds);
 
@@ -1982,18 +1995,20 @@
 
             // Build permutations for every cycle that any of the days falls into,
             // using the fast Int32Array Fisher-Yates. The boundary fix (swap
-            // vals[0] with vals[1] if it equals previousCycleLast) only matters
-            // when a day sits at position 0 of its cycle. Detect whether any of
-            // our window days need it; if so, fall back to the slow path that
-            // does the previous-cycle lookup. This keeps the fast path for the
-            // common case (numDays < newTotal) while staying bit-exact with
-            // production for the multi-cycle case.
+            // vals[0] with vals[1] if it equals previousCycleLast) changes both
+            // slots, so it matters when a day sits at position 0 or 1 of its
+            // cycle. Detect whether any of our window days need it; if so, fall
+            // back to the slow path that does the previous-cycle lookup. This
+            // keeps the fast path for the common case (numDays < newTotal) while
+            // staying bit-exact with production for the multi-cycle case.
             const firstCycle = Math.floor(baseDaySerials[0] / newTotal);
             const lastCycle = Math.floor(baseDaySerials[numDays - 1] / newTotal);
             const permCount = lastCycle - firstCycle + 1;
             let needsBoundaryFix = false;
             for (let i = 0; i < numDays; i++) {
-              if (baseDaySerials[i] % newTotal === 0) { needsBoundaryFix = true; break; }
+              // Position computed exactly like the read path below.
+              const s = baseDaySerials[i];
+              if (s - Math.floor(s / newTotal) * newTotal <= 1) { needsBoundaryFix = true; break; }
             }
             if (!needsBoundaryFix) {
               // Fast path: no day at position 0, swap is irrelevant.
@@ -2026,8 +2041,10 @@
 
             if (preserved > bestScore) {
               // Re-walk to capture dayIndices now that we know this is the new best.
-              const dayIndices = new Array(preserved);
-              for (let i = 0; i < preserved; i++) {
+              // Capture the FULL window (not just the preserved prefix) so any
+              // downstream preview shows the true schedule for every day.
+              const dayIndices = new Array(numDays);
+              for (let i = 0; i < numDays; i++) {
                 const daySerial = baseDaySerials[i];
                 const cycleNumber = Math.floor(daySerial / newTotal);
                 const positionInCycle = daySerial - (cycleNumber * newTotal);
@@ -2096,6 +2113,16 @@
     }
 
     // ================== Per-Cycle Shuffle Quote Selection ==================
+
+    /**
+     * Code-unit ID comparison (NOT localeCompare): matches the production
+     * sort order (Dart String.compareTo / Kotlin compareTo) on every machine
+     * regardless of browser language. Keep in sync with the worker copy.
+     */
+    function compareIds(a, b) {
+      const x = a.id, y = b.id;
+      return x < y ? -1 : x > y ? 1 : 0;
+    }
 
     /**
      * Mulberry32 PRNG - deterministic, same implementation across all platforms.
@@ -2850,7 +2877,7 @@
     }
 
     function getScheduledQuotes() {
-      return cloneQuotes(quotes).sort((a, b) => a.id.localeCompare(b.id));
+      return cloneQuotes(quotes).sort(compareIds);
     }
 
     function stableIdForText(text) {
