@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-09-09T09:58:03.057Z",
-  "baseFileSha": "ca9f9de8c0d439332a1364357188e31e0334ac85",
+  "updatedAt": "2026-09-09T10:07:44.752Z",
+  "baseFileSha": "f26023e7348428e7b512f987bab6cc04ca27c0dc",
   "quotes": [
     {
       "id": "q_0vjdju0",
@@ -361,6 +361,10 @@
     {
       "id": "q_zzzz008w7m",
       "text": "It’s always this moment"
+    },
+    {
+      "id": "q_zzzz00039d",
+      "text": "Have you always been this way?"
     }
   ]
 }
