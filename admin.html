@@ -1103,20 +1103,10 @@
           baselineTexts[i] = baseQuotes[idx];
         }
 
-        // Pre-compute base hash state
-        let baseHash = 0x811C9DC5 >>> 0;
-        for (const id of existingIds) {
-          for (let j = 0; j < id.length; j++) {
-            baseHash ^= id.charCodeAt(j);
-            baseHash = Math.imul(baseHash, 0x01000193) >>> 0;
-          }
-          baseHash ^= 0x1F;
-          baseHash = Math.imul(baseHash, 0x01000193) >>> 0;
-        }
-
         const newTotal = baseTotal + 1;
         let bestScore = -1;
         let bestId = null;
+        let bestRank = -1;
         let bestDayIndices = null;
         let currentAttempt = 0;
 
@@ -1129,36 +1119,44 @@
           rngBuffers[i] = new Int32Array(newTotal);
         }
 
-        // FNV pre-fold: hash state after XORing the fixed 'q_zzzz' prefix.
-        // Lets the inner loop hash only the 6 base36 digits of the candidate,
-        // avoiding toString(36).padStart + 12 charCodeAt calls per attempt.
-        let prefixHash = baseHash;
-        const prefix = 'q_zzzz';
-        for (let k = 0; k < prefix.length; k++) {
-          prefixHash ^= prefix.charCodeAt(k);
-          prefixHash = Math.imul(prefixHash, 0x01000193) >>> 0;
-        }
-        const DIGIT_CHARS = new Int32Array(36);
-        for (let d = 0; d < 36; d++) {
-          DIGIT_CHARS[d] = d < 10 ? (0x30 + d) : (0x61 + d - 10);
-        }
-        const digitBuf = new Int32Array(6);
-
         while (currentAttempt < maxAttempts) {
-          // FNV-fold the 6 base36 digits of currentAttempt into prefixHash.
-          // Avoids building the candidate string + 12 charCodeAt calls per attempt.
-          let n = currentAttempt;
-          for (let k = 5; k >= 0; k--) {
-            digitBuf[k] = DIGIT_CHARS[n % 36];
-            n = (n / 36) | 0;
+          const candidateId = 'q_zzzz' + currentAttempt.toString(36).padStart(6, '0');
+          // Insertion rank of the candidate among the sorted existing IDs
+          // (code-unit order, matching compareIds). Candidates do NOT always
+          // sort last — earlier bruteforced IDs (q_zzzz…) already occupy the
+          // tail — so the seed must fold the candidate at its true position.
+          let rankLo = 0, rankHi = baseTotal;
+          while (rankLo < rankHi) {
+            const mid = (rankLo + rankHi) >>> 1;
+            if (existingIds[mid] < candidateId) rankLo = mid + 1; else rankHi = mid;
           }
-          let hash = prefixHash;
-          for (let k = 0; k < 6; k++) {
-            hash ^= digitBuf[k];
+          const rank = rankLo;
+          // Full seed over the true sorted order with the candidate spliced in.
+          let hash = 0x811C9DC5 >>> 0;
+          for (let k = 0; k < rank; k++) {
+            const id = existingIds[k];
+            for (let j = 0; j < id.length; j++) {
+              hash ^= id.charCodeAt(j);
+              hash = Math.imul(hash, 0x01000193) >>> 0;
+            }
+            hash ^= 0x1F;
+            hash = Math.imul(hash, 0x01000193) >>> 0;
+          }
+          for (let j = 0; j < candidateId.length; j++) {
+            hash ^= candidateId.charCodeAt(j);
             hash = Math.imul(hash, 0x01000193) >>> 0;
           }
           hash ^= 0x1F;
           hash = Math.imul(hash, 0x01000193) >>> 0;
+          for (let k = rank; k < baseTotal; k++) {
+            const id = existingIds[k];
+            for (let j = 0; j < id.length; j++) {
+              hash ^= id.charCodeAt(j);
+              hash = Math.imul(hash, 0x01000193) >>> 0;
+            }
+            hash ^= 0x1F;
+            hash = Math.imul(hash, 0x01000193) >>> 0;
+          }
           const newSeed = hash >>> 0;
 
           // Build permutations for every cycle that any of the days falls into.
@@ -1186,15 +1184,19 @@
             }
           }
 
-          // Check each day using the pre-built permutations
+          // Check each day using the pre-built permutations.
+          // Index mapping follows the candidate's true sorted rank: below it
+          // are existing quotes, at it is the new quote, above it existing
+          // quotes shifted by one.
+          const mapIdx = (idx) => idx < rank ? baseQuotes[idx]
+            : (idx === rank ? newQuoteText : baseQuotes[idx - 1]);
           let preserved = 0;
           for (let i = 0; i < numDays; i++) {
             const daySerial = baseDaySerials[i];
             const cycleNumber = Math.floor(daySerial / newTotal);
             const positionInCycle = daySerial - (cycleNumber * newTotal);
             const idx = permBuffers[cycleNumber - firstCycle][positionInCycle];
-            const newText = idx < baseTotal ? baseQuotes[idx] : newQuoteText;
-            if (newText === baselineTexts[i]) {
+            if (mapIdx(idx) === baselineTexts[i]) {
               preserved++;
             } else {
               break;
@@ -1215,10 +1217,10 @@
             // Skip if this candidate ID is already taken — keep searching for a free ID
             // with the same (or better) score. Collision is rare but matters when adding
             // multiple quotes via bruteforce in a row (search restarts from 0 each time).
-            const candidateId = 'q_zzzz' + currentAttempt.toString(36).padStart(6, '0');
             if (!existingIdsSet.has(candidateId)) {
               bestScore = preserved;
               bestId = candidateId;
+              bestRank = rank;
               bestDayIndices = dayIndices;
             }
           }
@@ -1254,8 +1256,14 @@
             String(dayDate.getDate()).padStart(2, '0');
           const baseIdx = getQuoteIndexForDaySerial(baseDaySerials[i], baseTotal, baseSeed);
           baselineDays[i] = { date: dateStr, quote: sortedExisting[baseIdx], index: baseIdx };
+          // Rank-aware mapping: below bestRank are existing quotes, at it is
+          // the new quote, above it existing quotes shifted by one.
+          const newQuote = !bestDayIndices ? sortedExisting[baseIdx]
+            : bestDayIndices[i] < bestRank ? sortedExisting[bestDayIndices[i]]
+            : (bestDayIndices[i] === bestRank
+              ? { id: bestId, text: newQuoteText }
+              : sortedExisting[bestDayIndices[i] - 1]);
           const newIdx = bestDayIndices ? bestDayIndices[i] : baseIdx;
-          const newQuote = newIdx < baseTotal ? sortedExisting[newIdx] : { id: bestId, text: newQuoteText };
           newDays[i] = { date: dateStr, quote: newQuote, index: newIdx };
         }
 
@@ -1923,23 +1931,10 @@
         baselineTexts[i] = baseQuotes[idx];
       }
 
-      // Pre-compute base hash state
-      // seed = FNV(existingIds) XOR FNV(candidateId) XOR 0x1F
-      // So we can compute base hash state and add candidate contribution
-      let baseHash = 0x811C9DC5 >>> 0;
-      for (const id of existingIds) {
-        for (let j = 0; j < id.length; j++) {
-          baseHash ^= id.charCodeAt(j);
-          baseHash = Math.imul(baseHash, 0x01000193) >>> 0;
-        }
-        baseHash ^= 0x1F;
-        baseHash = Math.imul(baseHash, 0x01000193) >>> 0;
-      }
-      // baseHash now contains hash AFTER all existing IDs (including their 0x1F separators)
-
       const newTotal = baseTotal + 1;
       let bestScore = -1;
       let bestId = null;
+      let bestRank = -1;
       let bestDayIndices = null;
       let currentAttempt = 0;
       const chunkSize = 500000;
@@ -1953,21 +1948,6 @@
         rngBuffers[i] = new Int32Array(newTotal);
       }
 
-      // FNV pre-fold: hash state after XORing the fixed 'q_zzzz' prefix.
-      // Lets the inner loop hash only the 6 base36 digits of the candidate,
-      // avoiding toString(36).padStart + 12 charCodeAt calls per attempt.
-      let prefixHash = baseHash;
-      const prefix = 'q_zzzz';
-      for (let k = 0; k < prefix.length; k++) {
-        prefixHash ^= prefix.charCodeAt(k);
-        prefixHash = Math.imul(prefixHash, 0x01000193) >>> 0;
-      }
-      const DIGIT_CHARS = new Int32Array(36);
-      for (let d = 0; d < 36; d++) {
-        DIGIT_CHARS[d] = d < 10 ? (0x30 + d) : (0x61 + d - 10);
-      }
-      const digitBuf = new Int32Array(6);
-
       return new Promise((resolve) => {
         function processChunk() {
           if (isCancelled()) {
@@ -1978,19 +1958,43 @@
           const end = Math.min(currentAttempt + chunkSize, maxAttempts);
 
           for (; currentAttempt < end; currentAttempt++) {
-            // FNV-fold the 6 base36 digits of currentAttempt into prefixHash.
-            let n = currentAttempt;
-            for (let k = 5; k >= 0; k--) {
-              digitBuf[k] = DIGIT_CHARS[n % 36];
-              n = (n / 36) | 0;
+            const candidateId = 'q_zzzz' + currentAttempt.toString(36).padStart(6, '0');
+            // Insertion rank of the candidate among the sorted existing IDs
+            // (code-unit order, matching compareIds). Candidates do NOT always
+            // sort last — earlier bruteforced IDs (q_zzzz…) already occupy the
+            // tail — so the seed must fold the candidate at its true position.
+            let rankLo = 0, rankHi = baseTotal;
+            while (rankLo < rankHi) {
+              const mid = (rankLo + rankHi) >>> 1;
+              if (existingIds[mid] < candidateId) rankLo = mid + 1; else rankHi = mid;
             }
-            let hash = prefixHash;
-            for (let k = 0; k < 6; k++) {
-              hash ^= digitBuf[k];
+            const rank = rankLo;
+            // Full seed over the true sorted order with the candidate spliced in.
+            let hash = 0x811C9DC5 >>> 0;
+            for (let k = 0; k < rank; k++) {
+              const id = existingIds[k];
+              for (let j = 0; j < id.length; j++) {
+                hash ^= id.charCodeAt(j);
+                hash = Math.imul(hash, 0x01000193) >>> 0;
+              }
+              hash ^= 0x1F;
+              hash = Math.imul(hash, 0x01000193) >>> 0;
+            }
+            for (let j = 0; j < candidateId.length; j++) {
+              hash ^= candidateId.charCodeAt(j);
               hash = Math.imul(hash, 0x01000193) >>> 0;
             }
             hash ^= 0x1F;
             hash = Math.imul(hash, 0x01000193) >>> 0;
+            for (let k = rank; k < baseTotal; k++) {
+              const id = existingIds[k];
+              for (let j = 0; j < id.length; j++) {
+                hash ^= id.charCodeAt(j);
+                hash = Math.imul(hash, 0x01000193) >>> 0;
+              }
+              hash ^= 0x1F;
+              hash = Math.imul(hash, 0x01000193) >>> 0;
+            }
             const newSeed = hash >>> 0;
 
             // Build permutations for every cycle that any of the days falls into,
@@ -2024,15 +2028,19 @@
               }
             }
 
-            // Check each day using the pre-built permutations
+            // Check each day using the pre-built permutations.
+            // Index mapping follows the candidate's true sorted rank: below it
+            // are existing quotes, at it is the new quote, above it existing
+            // quotes shifted by one.
+            const mapIdx = (idx) => idx < rank ? baseQuotes[idx]
+              : (idx === rank ? newQuoteText : baseQuotes[idx - 1]);
             let preserved = 0;
             for (let i = 0; i < numDays; i++) {
               const daySerial = baseDaySerials[i];
               const cycleNumber = Math.floor(daySerial / newTotal);
               const positionInCycle = daySerial - (cycleNumber * newTotal);
               const idx = permBuffers[cycleNumber - firstCycle][positionInCycle];
-              const newText = idx < baseTotal ? baseQuotes[idx] : newQuoteText;
-              if (newText === baselineTexts[i]) {
+              if (mapIdx(idx) === baselineTexts[i]) {
                 preserved++;
               } else {
                 break;
@@ -2052,10 +2060,10 @@
               }
               // Skip if this candidate ID is already taken — keep searching for a free ID
               // with the same (or better) score.
-              const candidateId = 'q_zzzz' + currentAttempt.toString(36).padStart(6, '0');
               if (!existingIdsSet.has(candidateId)) {
                 bestScore = preserved;
                 bestId = candidateId;
+                bestRank = rank;
                 bestDayIndices = dayIndices;
                 if (preserved === numDays) {
                   finish();
@@ -2092,8 +2100,14 @@
               String(dayDate.getDate()).padStart(2, '0');
             const baseIdx = getQuoteIndexForDaySerial(baseDaySerials[i], baseTotal, baseSeed);
             baselineDays[i] = { date: dateStr, quote: sortedExisting[baseIdx], index: baseIdx };
+            // Rank-aware mapping: below bestRank are existing quotes, at it is
+            // the new quote, above it existing quotes shifted by one.
+            const newQuote = !bestDayIndices ? sortedExisting[baseIdx]
+              : bestDayIndices[i] < bestRank ? sortedExisting[bestDayIndices[i]]
+              : (bestDayIndices[i] === bestRank
+                ? { id: bestId, text: newQuoteText }
+                : sortedExisting[bestDayIndices[i] - 1]);
             const newIdx = bestDayIndices ? bestDayIndices[i] : baseIdx;
-            const newQuote = newIdx < baseTotal ? sortedExisting[newIdx] : { id: bestId, text: newQuoteText };
             newDays[i] = { date: dateStr, quote: newQuote, index: newIdx };
           }
 
