@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-09-09T06:25:25.114Z",
-  "baseFileSha": "0f4f618717b9e6289fb03195478b3c9a24d5cfb4",
+  "updatedAt": "2026-09-09T06:29:03.332Z",
+  "baseFileSha": "e96cfce3c4cc8725607a22f906b717c9c84fb06b",
   "quotes": [
     {
       "id": "q_0vjdju0",
@@ -357,10 +357,6 @@
     {
       "id": "q_zzzz00tb4y",
       "text": "There's no home like here"
-    },
-    {
-      "id": "q_zzzz01onws",
-      "text": "It all happens momentarily"
     }
   ]
 }
