@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-09-09T10:07:44.752Z",
-  "baseFileSha": "f26023e7348428e7b512f987bab6cc04ca27c0dc",
+  "updatedAt": "2026-09-11T19:28:28.908Z",
+  "baseFileSha": "ba50294fc6dac0ceb1751b9d899234686a58ed9b",
   "quotes": [
     {
       "id": "q_0vjdju0",
@@ -365,6 +365,10 @@
     {
       "id": "q_zzzz00039d",
       "text": "Have you always been this way?"
+    },
+    {
+      "id": "q_zzzz0007mf",
+      "text": "Listen to the quiet"
     }
   ]
 }
