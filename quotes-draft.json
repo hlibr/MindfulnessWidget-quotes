@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-09-12T08:51:36.886Z",
-  "baseFileSha": "89aa6cf4b7fce103a0b31f0c485cdd1e0adebf25",
+  "updatedAt": "2026-09-12T11:52:43.099Z",
+  "baseFileSha": "f242199e34b06a797926425db35c016e56d426f0",
   "quotes": [
     {
       "id": "q_0vjdju0",
@@ -381,6 +381,10 @@
     {
       "id": "q_zzzz0001rp",
       "text": "It’s always the present moment"
+    },
+    {
+      "id": "q_zzzz0001ai",
+      "text": "Who's looking?"
     }
   ]
 }
