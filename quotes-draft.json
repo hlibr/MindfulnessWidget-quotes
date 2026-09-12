@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-09-12T11:52:43.099Z",
-  "baseFileSha": "f242199e34b06a797926425db35c016e56d426f0",
+  "updatedAt": "2026-09-12T23:31:58.862Z",
+  "baseFileSha": "821bf83180835d9af0da5f337982ce79b4eae50e",
   "quotes": [
     {
       "id": "q_0vjdju0",
@@ -385,6 +385,10 @@
     {
       "id": "q_zzzz0001ai",
       "text": "Who's looking?"
+    },
+    {
+      "id": "q_zzzz000ve8",
+      "text": "This isn’t right or wrong.\nThis is a screen."
     }
   ]
 }
