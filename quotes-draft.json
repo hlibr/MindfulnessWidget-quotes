@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-12T08:49:15.088Z",
+  "updatedAt": "2026-09-12T08:51:36.886Z",
   "baseFileSha": "89aa6cf4b7fce103a0b31f0c485cdd1e0adebf25",
   "quotes": [
     {
@@ -377,6 +377,10 @@
     {
       "id": "q_zzzz0001dr",
       "text": "Your nose is in front of your eyes right now.\nWhat else are you ignoring subconsciously?"
+    },
+    {
+      "id": "q_zzzz0001rp",
+      "text": "It’s always the present moment"
     }
   ]
 }
