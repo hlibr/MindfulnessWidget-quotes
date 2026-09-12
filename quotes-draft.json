@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-09-12T08:21:56.597Z",
-  "baseFileSha": "ba50294fc6dac0ceb1751b9d899234686a58ed9b",
+  "updatedAt": "2026-09-12T08:49:15.088Z",
+  "baseFileSha": "89aa6cf4b7fce103a0b31f0c485cdd1e0adebf25",
   "quotes": [
     {
       "id": "q_0vjdju0",
@@ -373,6 +373,10 @@
     {
       "id": "q_zzzz0008bg",
       "text": "This is always happening now"
+    },
+    {
+      "id": "q_zzzz0001dr",
+      "text": "Your nose is in front of your eyes right now.\nWhat else are you ignoring subconsciously?"
     }
   ]
 }
