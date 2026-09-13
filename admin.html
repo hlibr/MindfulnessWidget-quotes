@@ -625,6 +625,26 @@
       flex-wrap: wrap;
     }
 
+    .schedule-section h3.schedule-toggle {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .schedule-chevron {
+      display: inline-block;
+      font-size: 12px;
+      color: var(--text-dim);
+      transition: transform 0.15s ease;
+    }
+
+    .schedule-section:not(.collapsed) .schedule-chevron {
+      transform: rotate(90deg);
+    }
+
+    .schedule-section.collapsed .schedule-body {
+      display: none;
+    }
+
     .schedule-hint {
       font-size: 12px;
       color: var(--text-dim);
@@ -660,6 +680,16 @@
       gap: 8px;
       margin-bottom: 6px;
       flex-wrap: wrap;
+    }
+
+    .schedule-date-row input[type="date"] {
+      flex: 1 1 auto;
+      min-width: 0;
+      width: auto;
+    }
+
+    .schedule-date-row button {
+      flex: 0 0 auto;
     }
 
     .schedule-date {
@@ -720,16 +750,8 @@
 
     .schedule-add-row {
       display: flex;
+      flex-direction: column;
       gap: 10px;
-    }
-
-    .schedule-add-row input[type="date"] {
-      flex: 0 0 auto;
-    }
-
-    .schedule-add-row input[type="text"] {
-      flex: 1 1 auto;
-      min-width: 0;
     }
 
     .schedule-actions {
@@ -1008,8 +1030,9 @@
       </div>
 
       <!-- Schedule (quote_schedule.json — no draft mode, own Save/Discard) -->
-      <div class="schedule-section">
-        <h3>🗓️ Schedule <span id="scheduleCount" class="quote-count"></span></h3>
+      <div class="schedule-section collapsed" id="scheduleSection">
+        <h3 class="schedule-toggle" onclick="toggleScheduleCollapse()"><span class="schedule-chevron">▶</span> 🗓️ Schedule <span id="scheduleCount" class="quote-count"></span></h3>
+        <div class="schedule-body" id="scheduleBody">
         <p class="schedule-hint">Pin a quote to a calendar date. The app shows it that day (custom quotes still win; rerolls and no-repeat still apply). Past dates are ignored by the app.</p>
         <div id="scheduleList" class="schedule-list"></div>
         <div class="schedule-add">
@@ -1022,6 +1045,7 @@
         <div class="schedule-actions">
           <button class="btn-secondary btn-small" onclick="discardSchedule()">Discard</button>
           <button id="schedulePushButton" class="btn-success btn-small" onclick="saveSchedule()">Save schedule</button>
+        </div>
         </div>
       </div>
 
@@ -1886,6 +1910,7 @@
     // Init
     document.addEventListener('DOMContentLoaded', () => {
       setupSingleQuoteEnterShortcuts();
+      initScheduleCollapse();
 
       const savedPat = localStorage.getItem('github_pat');
       if (savedPat) {
@@ -2811,6 +2836,27 @@
       return schedule.find(e => e.date === dateStr) || null;
     }
 
+    // Schedule section collapse — minimized by default, choice persists.
+    function setScheduleCollapsed(collapsed) {
+      document.getElementById('scheduleSection')?.classList.toggle('collapsed', collapsed);
+      try {
+        localStorage.setItem('schedule_collapsed', collapsed ? '1' : '0');
+      } catch (_) {}
+    }
+
+    function toggleScheduleCollapse() {
+      const section = document.getElementById('scheduleSection');
+      setScheduleCollapsed(section ? !section.classList.contains('collapsed') : false);
+    }
+
+    function initScheduleCollapse() {
+      let collapsed = true;
+      try {
+        collapsed = localStorage.getItem('schedule_collapsed') !== '0';
+      } catch (_) {}
+      document.getElementById('scheduleSection')?.classList.toggle('collapsed', collapsed);
+    }
+
     async function loadSchedule(options = {}) {
       const { silent = false } = options;
       try {
@@ -2897,7 +2943,8 @@
         return `
           <div class="schedule-item ${isToday ? 'today' : ''} ${isPast ? 'past' : ''}">
             <div class="schedule-date-row">
-              <input type="date" value="${entry.date}" onchange="changeScheduleDate(${idx}, this.value)" aria-label="Scheduled date">
+              <input type="date" id="schedule-date-${idx}" value="${entry.date}" aria-label="Scheduled date">
+              <button class="btn-secondary btn-small" onclick="applyScheduleDate(${idx})">Set</button>
               <span class="schedule-date">${escapeHtml(label)} (${escapeHtml(rel)})</span>
               ${isToday ? '<span class="schedule-badge today">TODAY</span>' : '<span class="schedule-badge">📌</span>'}
             </div>
@@ -3054,6 +3101,14 @@
       schedule[idx] = { date: schedule[idx].date, text };
       updateScheduleState();
       showToast('Schedule updated');
+    }
+
+    // Date changes apply only on explicit Set: date inputs commit
+    // mid-typing (typing "1" snaps to "01"), so live-applying would eat the
+    // keystrokes for "10"/"12" and steal focus when the list re-renders.
+    function applyScheduleDate(idx) {
+      const input = document.getElementById(`schedule-date-${idx}`);
+      changeScheduleDate(idx, input ? input.value : '');
     }
 
     function changeScheduleDate(idx, newDate) {
