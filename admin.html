@@ -2950,7 +2950,11 @@
         showToast('Pick a valid date', 'error');
         return;
       }
-      const text = (scheduleModalText || '').trim();
+      // Same `\n` escape as every other text entry path (add-row, inline
+      // edit, quotes add/import): a typed literal "\n" means newline, so a
+      // quote carrying one still schedules as the multiline text the user
+      // asked for instead of storing different bytes by entry path.
+      const text = (scheduleModalText || '').trim().replace(/\\n/g, '\n');
       if (!text) {
         showToast('Quote is empty', 'error');
         return;
