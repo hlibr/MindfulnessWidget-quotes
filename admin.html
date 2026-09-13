@@ -1575,7 +1575,13 @@
     // ================== Bruteforce Modal Functions ==================
 
     function openBruteforceModal(text) {
-      bruteforcePendingText = text;
+      const normalized = normalizeNewQuoteText(text);
+      if (!normalized) return;
+      if (isDuplicateQuoteText(normalized)) {
+        showToast('This quote already exists', 'error');
+        return;
+      }
+      bruteforcePendingText = normalized;
       bruteforceResult = null;
       document.getElementById('bruteforceModal').classList.add('active');
       document.getElementById('bruteforceAcceptBtn').disabled = true;
@@ -1766,9 +1772,23 @@
     // ================== Batch Bruteforce Functions ==================
 
     function openBatchBruteforceModal(texts) {
-      batchBruteforcePending = texts;
+      const normalizedList = (texts || []).map((t) => normalizeNewQuoteText(t)).filter(Boolean);
+      if (normalizedList.length === 0) return;
+      const seen = new Set();
+      for (const text of normalizedList) {
+        if (seen.has(text)) {
+          showToast('Batch contains duplicate quotes', 'error');
+          return;
+        }
+        seen.add(text);
+        if (isDuplicateQuoteText(text)) {
+          showToast('This quote already exists', 'error');
+          return;
+        }
+      }
+      batchBruteforcePending = normalizedList;
       batchBruteforceResults = null;
-      document.getElementById('batchCount').textContent = texts.length;
+      document.getElementById('batchCount').textContent = normalizedList.length;
       document.getElementById('batchBruteforceModal').classList.add('active');
       document.getElementById('batchBruteforceAcceptBtn').disabled = true;
       runBatchBruteforceSearch();
@@ -3232,9 +3252,13 @@
     }
 
     function saveEdit(index) {
-      const newText = document.getElementById(`edit-${index}`).value.trim();
+      const newText = normalizeNewQuoteText(document.getElementById(`edit-${index}`).value);
       if (!newText) {
         showToast('Quote cannot be empty', 'error');
+        return;
+      }
+      if (isDuplicateQuoteText(newText, index)) {
+        showToast('This quote already exists', 'error');
         return;
       }
       quotes[index].text = newText;
@@ -3246,11 +3270,13 @@
     // Add
     function addSingleQuote() {
       const input = document.getElementById('newQuoteInput');
-      let text = input.value.trim();
+      const text = normalizeNewQuoteText(input.value);
       if (!text) return;
 
-      // Convert literal \n to actual newlines
-      text = text.replace(/\\n/g, '\n');
+      if (isDuplicateQuoteText(text)) {
+        showToast('This quote already exists', 'error');
+        return;
+      }
 
       input.value = '';
       openBruteforceModal(text);
@@ -3261,9 +3287,21 @@
 
     function addBatchQuotes() {
       const input = document.getElementById('batchInput');
-      // Convert literal \n to actual newlines, then split by real newlines
-      const lines = input.value.split('\n').map(l => l.trim().replace(/\\n/g, '\n')).filter(l => l);
+      const lines = input.value.split('\n').map((t) => normalizeNewQuoteText(t)).filter(l => l);
       if (lines.length === 0) return;
+
+      const seen = new Set();
+      for (const line of lines) {
+        if (seen.has(line)) {
+          showToast('Batch contains duplicate quotes', 'error');
+          return;
+        }
+        seen.add(line);
+        if (isDuplicateQuoteText(line)) {
+          showToast('This quote already exists', 'error');
+          return;
+        }
+      }
 
       input.value = '';
       // For batch, we'll bruteforce the first one then add rest normally
@@ -3278,11 +3316,13 @@
 
     function addBottomQuote() {
       const input = document.getElementById('bottomQuoteInput');
-      let text = input.value.trim();
+      const text = normalizeNewQuoteText(input.value);
       if (!text) return;
 
-      // Convert literal \n to actual newlines
-      text = text.replace(/\\n/g, '\n');
+      if (isDuplicateQuoteText(text)) {
+        showToast('This quote already exists', 'error');
+        return;
+      }
 
       input.value = '';
       openBruteforceModal(text);
@@ -3607,6 +3647,26 @@
     }
 
     // Utilities
+    // Normalize candidate quote text the same way every add/edit path stores
+    // it: CRLF/CR unified to LF, surrounding whitespace trimmed, literal
+    // "\n" sequences converted to real newlines.
+    function normalizeNewQuoteText(raw) {
+      return String(raw == null ? '' : raw).replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim().replace(/\\n/g, '\n');
+    }
+
+    // Exact-text duplicate check against the active quote list (live/draft).
+    // Returns the matching index, or -1 when the text is unique. Pass the
+    // edited row via excludeIndex so saving without changes is not flagged.
+    function findDuplicateQuoteIndex(text, excludeIndex = -1) {
+      const normalized = normalizeNewQuoteText(text);
+      if (!normalized) return -1;
+      return quotes.findIndex((q, i) => i !== excludeIndex && normalizeNewQuoteText(q.text) === normalized);
+    }
+
+    function isDuplicateQuoteText(text, excludeIndex = -1) {
+      return findDuplicateQuoteIndex(text, excludeIndex) !== -1;
+    }
+
     function normalizeQuotes(rawQuotes) {
       const usedIds = new Set();
       return rawQuotes
