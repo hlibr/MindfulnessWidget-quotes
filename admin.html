@@ -98,6 +98,7 @@
 
     input[type="password"],
     input[type="text"],
+    input[type="date"],
     textarea {
       width: 100%;
       padding: 14px 16px;
@@ -607,6 +608,189 @@
       min-height: 36px;
     }
 
+    /* Schedule */
+    .schedule-section {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .schedule-section h3 {
+      margin: 0 0 4px 0;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .schedule-hint {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin: 0 0 12px 0;
+    }
+
+    .schedule-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .schedule-item {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 12px;
+      border-left: 3px solid var(--warning);
+    }
+
+    .schedule-item.past {
+      opacity: 0.55;
+    }
+
+    .schedule-item.today {
+      border-left-color: var(--accent);
+      background: rgba(233, 69, 96, 0.1);
+    }
+
+    .schedule-date-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+    }
+
+    .schedule-date {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .schedule-date input[type="date"] {
+      padding: 8px 10px;
+      font-size: 14px;
+      min-height: 40px;
+    }
+
+    .schedule-badge {
+      font-size: 11px;
+      background: var(--warning);
+      color: #000;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .schedule-badge.today {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .schedule-quote {
+      font-size: 14px;
+      white-space: pre-wrap;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+
+    .schedule-item-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .schedule-item-actions button {
+      padding: 6px 12px;
+      font-size: 13px;
+      min-height: 32px;
+    }
+
+    .schedule-item-edit textarea {
+      min-height: 60px;
+      margin-bottom: 8px;
+    }
+
+    .schedule-add {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .schedule-add-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .schedule-add-row input[type="date"] {
+      flex: 0 0 auto;
+    }
+
+    .schedule-add-row input[type="text"] {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .schedule-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .schedule-actions button {
+      flex: 1;
+    }
+
+    .schedule-empty {
+      color: var(--text-dim);
+      text-align: center;
+      font-size: 14px;
+      padding: 12px;
+    }
+
+    .modal-quote-preview {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 14px;
+      white-space: pre-wrap;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    .modal-label {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin: 0 0 6px 0;
+    }
+
+    .modal input[type="date"],
+    .modal input[type="text"],
+    .modal textarea {
+      margin-bottom: 4px;
+    }
+
+    .confirm-quote {
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 13px;
+      white-space: pre-wrap;
+      line-height: 1.4;
+      margin-top: 6px;
+    }
+
+    .confirm-quote.old {
+      background: rgba(239, 68, 68, 0.12);
+      border-left: 3px solid var(--danger);
+    }
+
+    .confirm-quote.new {
+      background: rgba(74, 222, 128, 0.12);
+      border-left: 3px solid var(--success);
+    }
+
     /* Reroll Actions */
     .reroll-actions {
       display: flex;
@@ -779,7 +963,7 @@
 <body>
   <header>
     <div class="header-row">
-      <h1>📿 Quotes Admin v1.2.4+56</h1>
+      <h1>📿 Quotes Admin v1.3.0+57</h1>
       <span id="status" class="status">Not Connected</span>
     </div>
   </header>
@@ -820,6 +1004,24 @@
           <button class="btn-secondary btn-small" onclick="prevMonth()">◀ Prev Month</button>
           <button class="btn-primary btn-small" onclick="goToCurrentMonth()">This Month</button>
           <button class="btn-secondary btn-small" onclick="nextMonth()">Next Month ▶</button>
+        </div>
+      </div>
+
+      <!-- Schedule (quote_schedule.json — no draft mode, own Save/Discard) -->
+      <div class="schedule-section">
+        <h3>🗓️ Schedule <span id="scheduleCount" class="quote-count"></span></h3>
+        <p class="schedule-hint">Pin a quote to a calendar date. The app shows it that day (custom quotes still win; rerolls and no-repeat still apply). Past dates are ignored by the app.</p>
+        <div id="scheduleList" class="schedule-list"></div>
+        <div class="schedule-add">
+          <div class="schedule-add-row">
+            <input type="date" id="scheduleAddDate">
+            <input type="text" id="scheduleAddText" placeholder="Quote text for that date...">
+          </div>
+          <button class="btn-secondary btn-small" onclick="addScheduleEntry()">Add to schedule</button>
+        </div>
+        <div class="schedule-actions">
+          <button class="btn-secondary btn-small" onclick="discardSchedule()">Discard</button>
+          <button id="schedulePushButton" class="btn-success btn-small" onclick="saveSchedule()">Save schedule</button>
         </div>
       </div>
 
@@ -876,6 +1078,38 @@
   <!-- Toast -->
   <div id="toast" class="toast"></div>
 
+  <!-- Schedule Modal (clock button on a quote) -->
+  <div id="scheduleModal" class="modal-overlay">
+    <div class="modal">
+      <h3>🕒 Schedule quote</h3>
+      <p class="modal-label">Quote</p>
+      <div id="scheduleModalQuote" class="modal-quote-preview"></div>
+      <p class="modal-label">Show on date</p>
+      <input type="date" id="scheduleModalDate">
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeScheduleModal()">Discard</button>
+        <button class="btn-success" onclick="confirmScheduleModal()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule Conflict Confirm Modal -->
+  <div id="scheduleConflictModal" class="modal-overlay">
+    <div class="modal">
+      <h3>⚠️ Date already scheduled</h3>
+      <div style="font-size: 14px; margin-bottom: 8px;">This date already has a quote. Replace it?</div>
+      <div id="scheduleConflictDate" style="font-size: 13px; font-weight: 600; margin-bottom: 8px;"></div>
+      <p class="modal-label">Currently scheduled</p>
+      <div id="scheduleConflictOld" class="confirm-quote old"></div>
+      <p class="modal-label" style="margin-top: 10px;">Will be replaced with</p>
+      <div id="scheduleConflictNew" class="confirm-quote new"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeScheduleConflict()">Cancel</button>
+        <button class="btn-warning" onclick="acceptScheduleConflict()">Replace</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Batch Bruteforce Result Modal -->
   <div id="batchBruteforceModal" class="modal-overlay">
     <div class="modal" style="max-width: 500px;">
@@ -912,11 +1146,13 @@
 
   <script>
     // Config
-    const ADMIN_VERSION = '1.2.4+56';
+    const ADMIN_VERSION = '1.3.0+57';
     const REPO_OWNER = 'hlibr';
     const REPO_NAME = 'MindfulnessWidget-quotes';
     const FILE_PATH = 'quotes.json';
     const DRAFT_FILE_PATH = 'quotes-draft.json';
+    const SCHEDULE_FILE_PATH = 'quote_schedule.json';
+    const SCHEDULE_MAX_ENTRIES = 365;
     const EDIT_MODE_LIVE = 'live';
     const EDIT_MODE_DRAFT = 'draft';
 
@@ -942,6 +1178,17 @@
     let batchBruteforceResults = null; // Results for batch add
     let batchBruteforcePending = []; // Multiple quotes waiting
     let batchBruteforceCancelled = false; // Cancellation flag
+
+    // Schedule state (quote_schedule.json — separate file, no draft mode).
+    // Entries are plain { date: 'YYYY-MM-DD', text } — no IDs needed because
+    // the date itself is the key and the app looks the day up directly.
+    let schedule = [];
+    let originalSchedule = [];
+    let scheduleSha = '';
+    let hasScheduleChanges = false;
+    let scheduleModalText = '';
+    let scheduleConflict = null; // { date, text } pending replace
+    let scheduleEditingIndex = -1; // inline text edit in schedule list
 
     // DOM Elements
     const authSection = document.getElementById('authSection');
@@ -1702,6 +1949,7 @@
         selectEditMode(EDIT_MODE_LIVE, { capture: false, render: false });
         renderQuotes();
         updateTodayQuote();
+        await loadSchedule({ silent });
       } catch (e) {
         quoteList.innerHTML = `<div class="loading" style="color: var(--danger);">Error: ${e.message}</div>`;
       }
@@ -1814,11 +2062,19 @@
     function renderQuotes() {
       quoteCount.textContent = `(${quotes.length})`;
 
-      const today = getTodayQuote();
-      const todayId = today?.id;
+      // Highlight what the app actually shows today. Rotation days use the
+      // exact slot index (as before); scheduled days match by text so a
+      // free-text scheduled quote highlights nothing instead of the wrong
+      // item (and a pool-duplicate schedule highlights its wording).
+      const shown = quotes.length ? resolveTodayDisplay() : null;
+      const todayMatchIndex = !shown
+        ? -1
+        : shown.scheduled
+          ? quotes.findIndex(q => q.text === shown.text)
+          : shown.index;
 
       quoteList.innerHTML = quotes.map((quote, i) => `
-        <div class="quote-item ${quote.id === todayId ? 'today' : ''}" data-index="${i}" draggable="true">
+        <div class="quote-item ${i === todayMatchIndex ? 'today' : ''}" data-index="${i}" draggable="true">
           <span class="drag-handle">⋮⋮</span>
           <span class="quote-index">#${i + 1}</span>
           <div class="quote-content">
@@ -1826,6 +2082,7 @@
               <div class="quote-text">${escapeHtml(quote.text)}</div>
               <div class="quote-actions">
                 <button class="btn-secondary btn-small" onclick="editQuote(${i})">Edit</button>
+                <button class="btn-secondary btn-small" onclick="openScheduleModal(${i})" title="Schedule this quote for a date">🕒</button>
                 <button class="btn-danger btn-small" onclick="deleteQuote(${i})">Delete</button>
               </div>
             </div>
@@ -2279,21 +2536,10 @@
       return rerollOrder[(rerollCount - 1) % totalQuotes];
     }
 
-    /**
-     * Get today's quote index.
-     */
-    function getTodayIndex() {
-      const scheduled = getScheduledQuotes();
-      if (scheduled.length === 0) return 0;
-      const today = new Date();
-      return getQuoteIndexForDate(today, scheduled.length, 0, computeSourceSeed(scheduled.map(q => q.id)));
-    }
-
-    function getTodayQuote() {
-      const scheduled = getScheduledQuotes();
-      if (scheduled.length === 0) return null;
-      return scheduled[getTodayIndex()];
-    }
+    // NOTE: today's display goes through resolveTodayDisplay() (schedule +
+    // no-repeat fallback). There is intentionally no rotation-only
+    // getTodayQuote helper — it would highlight/quote the wrong thing on
+    // scheduled days.
 
     function updateTodayQuote() {
       if (quotes.length === 0) {
@@ -2302,13 +2548,59 @@
         return;
       }
       const scheduled = getScheduledQuotes();
-      const index = getTodayIndex();
-      const quote = scheduled[index];
-      todayQuote.textContent = quote.text;
-      todayMeta.textContent = `Schedule slot #${index + 1} of ${scheduled.length}`;
+      const shown = resolveTodayDisplay();
+      todayQuote.textContent = shown.text;
+      todayMeta.textContent = shown.scheduled
+        ? `📌 Scheduled for today · rotation slot #${shown.index + 1} of ${scheduled.length}`
+        : `Schedule slot #${shown.index + 1} of ${scheduled.length}`;
 
       // Also update timeline
       renderTimeline();
+    }
+
+    // Today's displayed quote, resolved exactly like the app: sequential
+    // resolve over [today-2, today-1, today] so the no-repeat fallback in
+    // the preview matches (scheduled text equal to yesterday's shown text
+    // falls back to rotation).
+    function resolveTodayDisplay() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      let prev = null;
+      for (let back = 2; back >= 1; back--) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - back);
+        prev = resolveDisplayForPreview(d, prev, 0).text;
+      }
+      return resolveDisplayForPreview(today, prev, 0);
+    }
+
+    // Preview resolver mirroring the app: base pick honors the schedule,
+    // rerolls ignore it, and a scheduled text equal to the previous day's
+    // shown text falls back to rotation (the app's no-repeat rule).
+    function resolveDisplayForPreview(date, prevText, rerollCount) {
+      const scheduled = getScheduledQuotes();
+      const total = scheduled.length;
+      const seed = computeSourceSeed(scheduled.map(q => q.id));
+      const dateStr = localDateStr(date);
+      const schedMap = getScheduleMap();
+      if ((rerollCount || 0) <= 0 && schedMap[dateStr] && schedMap[dateStr] !== prevText) {
+        return { text: schedMap[dateStr], scheduled: true, index: getQuoteIndexForDate(date, total, 0, seed) };
+      }
+      let index = getQuoteIndexForDate(date, total, rerollCount || 0, seed);
+      // Text-level no-repeat (mirrors the app): yesterday may have been a
+      // scheduled quote whose ID matches nothing here, so an ID-only check
+      // could still show the same words twice. Fall back to the first
+      // reroll-order candidate with different wording.
+      if ((rerollCount || 0) <= 0 && scheduled[index].text === prevText && total > 1) {
+        const order = buildCyclePermutation(total, getDaySerial(date), mixSeed(seed, 0x9E3779B9));
+        for (const cand of order) {
+          if (scheduled[cand].text !== prevText) {
+            index = cand;
+            break;
+          }
+        }
+      }
+      return { text: scheduled[index].text, scheduled: false, index };
     }
 
     // ================== Month-by-Month Timeline ==================
@@ -2340,6 +2632,14 @@
       const month = displayMonth.getMonth();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
 
+      // Seed prev with the day before the month so the no-repeat fallback
+      // on the 1st matches the app.
+      let prevText = null;
+      {
+        const seedDay = new Date(year, month, 0);
+        prevText = resolveDisplayForPreview(seedDay, null, 0).text;
+      }
+
       for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(year, month, day);
 
@@ -2347,8 +2647,8 @@
         const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const rerollCount = rerollCounts[dateKey] || 0;
 
-        const scheduled = getScheduledQuotes();
-        const index = getQuoteIndexForDate(date, scheduled.length, rerollCount, computeSourceSeed(scheduled.map(q => q.id)));
+        const shown = resolveDisplayForPreview(date, prevText, rerollCount);
+        prevText = shown.text;
 
         const isToday = date.getTime() === today.getTime();
         const dayDiff = Math.round((date - today) / (24 * 60 * 60 * 1000));
@@ -2382,8 +2682,8 @@
         items.push(`
           <div class="timeline-item ${isToday ? 'today' : ''}">
             <div class="timeline-content-wrapper">
-                <div class="timeline-date">${dateStr} (${dayLabel})</div>
-                <div class="timeline-quote">${escapeHtml(scheduled[index].text)}</div>
+                <div class="timeline-date">${dateStr} (${dayLabel})${shown.scheduled && rerollCount <= 0 ? ' <span class="day-label">📌 scheduled</span>' : ''}</div>
+                <div class="timeline-quote">${escapeHtml(shown.text)}</div>
             </div>
             ${rerollHtml}
           </div>
@@ -2399,16 +2699,21 @@
 
       const currentCount = rerollCounts[dateKey] || 0;
       const scheduled = getScheduledQuotes();
-      const currentIndex = getQuoteIndexForDate(date, scheduled.length, currentCount, computeSourceSeed(scheduled.map(q => q.id)));
+      const seed = computeSourceSeed(scheduled.map(q => q.id));
+      // Current visible text: scheduled quote on the base pick, else rotation.
+      // Rerolls always resolve from rotation (like the app), skipping any
+      // candidate whose text matches what's currently shown.
+      const schedMap = getScheduleMap();
+      const currentText = (currentCount <= 0 && schedMap[dateKey])
+        ? schedMap[dateKey]
+        : scheduled[getQuoteIndexForDate(date, scheduled.length, currentCount, seed)].text;
 
       let newCount = currentCount + 1;
-      let newIndex = getQuoteIndexForDate(date, scheduled.length, newCount, computeSourceSeed(scheduled.map(q => q.id)));
-
       let attempts = 0;
-      // Protection: try up to 10 times to find a different quote
-      while (newIndex === currentIndex && attempts < 10) {
+      while (attempts < 10) {
+        const idx = getQuoteIndexForDate(date, scheduled.length, newCount, seed);
+        if (scheduled[idx].text !== currentText) break;
         newCount++;
-        newIndex = getQuoteIndexForDate(date, scheduled.length, newCount, computeSourceSeed(scheduled.map(q => q.id)));
         attempts++;
       }
 
@@ -2442,12 +2747,411 @@
       renderTimeline();
     }
 
+    // ================== Schedule (quote_schedule.json) ==================
+    //
+    // Separate file from quotes.json: no draft mode, own Discard/Save.
+    // Entries are { date: 'YYYY-MM-DD', text } — no IDs. The date is the key;
+    // the app looks the day up directly, so IDs would add nothing.
+    // Duplicate dates: last wins (the UI confirms before replacing).
+
+    function localDateStr(date) {
+      return date.getFullYear() + '-' +
+        String(date.getMonth() + 1).padStart(2, '0') + '-' +
+        String(date.getDate()).padStart(2, '0');
+    }
+
+    function todayLocalStr() {
+      return localDateStr(new Date());
+    }
+
+    function isValidScheduleDate(s) {
+      if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+      const [y, m, d] = s.split('-').map(Number);
+      if (m < 1 || m > 12 || d < 1 || d > 31) return false;
+      const dt = new Date(y, m - 1, d);
+      return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
+    }
+
+    // Tolerantly normalize parsed schedule JSON into a sorted unique list.
+    // Invalid entries (bad date, empty text) are dropped; dupes last-win;
+    // capped so a bad deploy can't blow up the UI. Never throws.
+    function normalizeScheduleEntries(raw) {
+      try {
+        const list = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.schedule) ? raw.schedule : null);
+        if (!list) return [];
+        const byDate = new Map();
+        for (const item of list) {
+          if (!item || typeof item !== 'object') continue;
+          const date = typeof item.date === 'string' ? item.date.trim() : '';
+          const text = typeof item.text === 'string' ? item.text.trim()
+            : (item.text == null ? '' : String(item.text).trim());
+          if (!isValidScheduleDate(date) || !text) continue;
+          byDate.set(date, text);
+        }
+        return [...byDate.entries()]
+          .sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)
+          .slice(0, SCHEDULE_MAX_ENTRIES)
+          .map(([date, text]) => ({ date, text }));
+      } catch (_) {
+        return [];
+      }
+    }
+
+    function getScheduleMap() {
+      const map = {};
+      for (const entry of schedule) {
+        if (entry && isValidScheduleDate(entry.date) && entry.text) {
+          map[entry.date] = entry.text;
+        }
+      }
+      return map;
+    }
+
+    function findScheduleEntry(dateStr) {
+      return schedule.find(e => e.date === dateStr) || null;
+    }
+
+    async function loadSchedule(options = {}) {
+      const { silent = false } = options;
+      try {
+        const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${SCHEDULE_FILE_PATH}`, {
+          headers: { Authorization: `token ${pat}` }
+        });
+        if (res.status === 404) {
+          // File doesn't exist yet — empty schedule, created on first save.
+          schedule = [];
+          originalSchedule = [];
+          scheduleSha = '';
+          updateScheduleState();
+          return true;
+        }
+        if (!res.ok) throw new Error('Failed to load schedule');
+        const data = await res.json();
+        schedule = normalizeScheduleEntries(JSON.parse(decodeGitHubContent(data.content)));
+        originalSchedule = cloneSchedule(schedule);
+        scheduleSha = data.sha || '';
+        updateScheduleState();
+        return true;
+      } catch (e) {
+        // Keep the in-memory schedule untouched so a failed reload (e.g. on
+        // Discard) can never wipe unsaved edits; just re-render + report.
+        updateScheduleState();
+        if (!silent) showToast('Schedule load failed: ' + e.message, 'error');
+        return false;
+      }
+    }
+
+    function cloneSchedule(source) {
+      return source.map(({ date, text }) => ({ date, text }));
+    }
+
+    function updateScheduleState() {
+      hasScheduleChanges = JSON.stringify(schedule) !== JSON.stringify(originalSchedule);
+      // Any structural change invalidates positional inline-edit state (a
+      // re-sort shifts indices) — the edit box would otherwise attach to
+      // the wrong entry and silently drop in-progress edits.
+      scheduleEditingIndex = -1;
+      document.getElementById('scheduleCount').textContent = `(${schedule.length})`;
+      const btn = document.getElementById('schedulePushButton');
+      if (btn) btn.textContent = hasScheduleChanges ? 'Save schedule●' : 'Save schedule';
+      // Past dates are ignored by the app — steer the picker to today.
+      // (Typed past dates and existing past entries still work; they prune.)
+      const addDate = document.getElementById('scheduleAddDate');
+      if (addDate) addDate.min = todayLocalStr();
+      renderScheduleList();
+      // Timeline + today preview overlay the schedule.
+      renderTimeline();
+      updateTodayQuote();
+    }
+
+    function formatScheduleDate(dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const date = new Date(y, m - 1, d);
+      const label = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const dayDiff = Math.round((date - today) / (24 * 60 * 60 * 1000));
+      let rel = '';
+      if (dayDiff === 0) rel = 'TODAY';
+      else if (dayDiff === -1) rel = 'yesterday';
+      else if (dayDiff === 1) rel = 'tomorrow';
+      else if (dayDiff < 0) rel = `${Math.abs(dayDiff)} days ago`;
+      else rel = `in ${dayDiff} days`;
+      return { label, rel, diff: dayDiff };
+    }
+
+    function renderScheduleList() {
+      const el = document.getElementById('scheduleList');
+      if (!el) return;
+      if (schedule.length === 0) {
+        el.innerHTML = '<div class="schedule-empty">No scheduled quotes yet. Tap 🕒 on any quote, or add one below.</div>';
+        return;
+      }
+      const sorted = [...schedule].sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+      el.innerHTML = sorted.map((entry) => {
+        const idx = schedule.indexOf(entry);
+        const { label, rel, diff } = formatScheduleDate(entry.date);
+        const isToday = diff === 0;
+        const isPast = diff < 0;
+        const editing = scheduleEditingIndex === idx;
+        return `
+          <div class="schedule-item ${isToday ? 'today' : ''} ${isPast ? 'past' : ''}">
+            <div class="schedule-date-row">
+              <input type="date" value="${entry.date}" onchange="changeScheduleDate(${idx}, this.value)" aria-label="Scheduled date">
+              <span class="schedule-date">${escapeHtml(label)} (${escapeHtml(rel)})</span>
+              ${isToday ? '<span class="schedule-badge today">TODAY</span>' : '<span class="schedule-badge">📌</span>'}
+            </div>
+            ${editing ? `
+              <div class="schedule-item-edit">
+                <textarea id="schedule-edit-${idx}">${escapeHtml(entry.text)}</textarea>
+                <div class="schedule-item-actions">
+                  <button class="btn-secondary btn-small" onclick="cancelScheduleEdit()">Cancel</button>
+                  <button class="btn-success btn-small" onclick="saveScheduleEdit(${idx})">Save</button>
+                </div>
+              </div>
+            ` : `
+              <div class="schedule-quote">${escapeHtml(entry.text)}</div>
+              <div class="schedule-item-actions">
+                <button class="btn-secondary btn-small" onclick="editScheduleEntry(${idx})">Edit</button>
+                <button class="btn-danger btn-small" onclick="deleteScheduleEntry(${idx})">Delete</button>
+              </div>
+            `}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ---- Schedule modal (clock button on a quote) ----
+
+    function openScheduleModal(quoteIndex) {
+      const quote = quotes[quoteIndex];
+      if (!quote) return;
+      scheduleModalText = quote.text;
+      document.getElementById('scheduleModalQuote').textContent = quote.text;
+      // Default to tomorrow — scheduling for today mid-day would otherwise
+      // look like it "didn't work" until the app's no-replace rule is understood.
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const input = document.getElementById('scheduleModalDate');
+      input.value = localDateStr(tomorrow);
+      input.min = todayLocalStr();
+      document.getElementById('scheduleModal').classList.add('active');
+      setTimeout(() => input.focus(), 50);
+    }
+
+    function closeScheduleModal() {
+      document.getElementById('scheduleModal').classList.remove('active');
+      scheduleModalText = '';
+    }
+
+    function confirmScheduleModal() {
+      const date = document.getElementById('scheduleModalDate').value;
+      if (!isValidScheduleDate(date)) {
+        showToast('Pick a valid date', 'error');
+        return;
+      }
+      const text = (scheduleModalText || '').trim();
+      if (!text) {
+        showToast('Quote is empty', 'error');
+        return;
+      }
+      const existing = findScheduleEntry(date);
+      if (existing && existing.text !== text) {
+        // Conflict — confirm which quote gets replaced with which.
+        scheduleConflict = { date, text };
+        document.getElementById('scheduleConflictDate').textContent = formatScheduleDate(date).label + ' (' + date + ')';
+        document.getElementById('scheduleConflictOld').textContent = existing.text;
+        document.getElementById('scheduleConflictNew').textContent = text;
+        document.getElementById('scheduleConflictModal').classList.add('active');
+        return;
+      }
+      applyScheduleUpsert(date, text);
+      closeScheduleModal();
+    }
+
+    function closeScheduleConflict() {
+      document.getElementById('scheduleConflictModal').classList.remove('active');
+      scheduleConflict = null;
+    }
+
+    function acceptScheduleConflict() {
+      if (!scheduleConflict) return;
+      const { date, text, moveFromIndex } = scheduleConflict;
+      closeScheduleConflict();
+      // If the modal is still open (came from clock flow), close it too.
+      closeScheduleModal();
+      if (typeof moveFromIndex === 'number') {
+        // Move: drop the moved-from entry, then upsert at the new date.
+        schedule.splice(moveFromIndex, 1);
+      }
+      applyScheduleUpsert(date, text);
+    }
+
+    function applyScheduleUpsert(date, text) {
+      const idx = schedule.findIndex(e => e.date === date);
+      if (idx >= 0) {
+        schedule[idx] = { date, text };
+      } else {
+        schedule.push({ date, text });
+      }
+      schedule = normalizeScheduleEntries(schedule);
+      updateScheduleState();
+      showToast('Scheduled for ' + date);
+    }
+
+    // ---- Schedule list CRUD (in-memory until Save schedule) ----
+
+    function addScheduleEntry() {
+      const dateInput = document.getElementById('scheduleAddDate');
+      const textInput = document.getElementById('scheduleAddText');
+      const date = (dateInput.value || '').trim();
+      let text = (textInput.value || '').trim();
+      if (!isValidScheduleDate(date)) {
+        showToast('Pick a valid date', 'error');
+        return;
+      }
+      text = text.replace(/\\n/g, '\n');
+      if (!text) {
+        showToast('Quote text is empty', 'error');
+        return;
+      }
+      const existing = findScheduleEntry(date);
+      if (existing && existing.text !== text) {
+        scheduleConflict = { date, text };
+        document.getElementById('scheduleConflictDate').textContent = formatScheduleDate(date).label + ' (' + date + ')';
+        document.getElementById('scheduleConflictOld').textContent = existing.text;
+        document.getElementById('scheduleConflictNew').textContent = text;
+        document.getElementById('scheduleConflictModal').classList.add('active');
+        return;
+      }
+      dateInput.value = '';
+      textInput.value = '';
+      applyScheduleUpsert(date, text);
+    }
+
+    function editScheduleEntry(idx) {
+      scheduleEditingIndex = idx;
+      renderScheduleList();
+      setTimeout(() => document.getElementById(`schedule-edit-${idx}`)?.focus(), 50);
+    }
+
+    function cancelScheduleEdit() {
+      scheduleEditingIndex = -1;
+      renderScheduleList();
+    }
+
+    function saveScheduleEdit(idx) {
+      const ta = document.getElementById(`schedule-edit-${idx}`);
+      let text = (ta ? ta.value : '').trim().replace(/\\n/g, '\n');
+      if (!text) {
+        showToast('Quote cannot be empty', 'error');
+        return;
+      }
+      schedule[idx] = { date: schedule[idx].date, text };
+      updateScheduleState();
+      showToast('Schedule updated');
+    }
+
+    function changeScheduleDate(idx, newDate) {
+      if (!isValidScheduleDate(newDate)) {
+        showToast('Pick a valid date', 'error');
+        renderScheduleList();
+        return;
+      }
+      const entry = schedule[idx];
+      if (!entry || entry.date === newDate) return;
+      const existing = findScheduleEntry(newDate);
+      if (existing) {
+        scheduleConflict = { date: newDate, text: entry.text, moveFromIndex: idx };
+        document.getElementById('scheduleConflictDate').textContent = formatScheduleDate(newDate).label + ' (' + newDate + ')';
+        document.getElementById('scheduleConflictOld').textContent = existing.text;
+        document.getElementById('scheduleConflictNew').textContent = entry.text;
+        document.getElementById('scheduleConflictModal').classList.add('active');
+        renderScheduleList();
+        return;
+      }
+      schedule[idx] = { date: newDate, text: entry.text };
+      schedule = normalizeScheduleEntries(schedule);
+      updateScheduleState();
+      showToast('Date changed to ' + newDate);
+    }
+
+    function deleteScheduleEntry(idx) {
+      const entry = schedule[idx];
+      schedule.splice(idx, 1);
+      updateScheduleState();
+      showToast(entry ? 'Schedule entry deleted' : 'Deleted');
+    }
+
+    async function discardSchedule() {
+      scheduleEditingIndex = -1;
+      closeScheduleConflict();
+      const ok = await loadSchedule({ silent: true });
+      showToast(ok ? 'Schedule changes discarded' : 'Discard failed — your edits are kept', ok ? '' : 'error');
+    }
+
+    // Push quote_schedule.json to GitHub. quotes.json is never touched here.
+    async function saveSchedule() {
+      if (!hasScheduleChanges) {
+        showToast('No schedule changes to save');
+        return;
+      }
+      const payload = {
+        schedule: [...schedule].sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0)
+      };
+      const body = {
+        message: `Update quote schedule (${schedule.length} entries)`,
+        content: encodeJsonForGitHub(payload)
+      };
+      if (scheduleSha) body.sha = scheduleSha;
+      try {
+        const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${SCHEDULE_FILE_PATH}`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `token ${pat}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error('Save failed');
+        const data = await res.json();
+        scheduleSha = data.content.sha;
+        originalSchedule = cloneSchedule(schedule);
+        updateScheduleState();
+        showToast('Schedule saved to GitHub! CDN will update shortly.', 'success');
+      } catch (e) {
+        showToast('Schedule save failed: ' + e.message, 'error');
+      }
+    }
+
     function setupSingleQuoteEnterShortcuts() {
       document.getElementById('newQuoteInput').addEventListener('keydown', (e) => {
         handleSingleQuoteEnter(e, addSingleQuote);
       });
       document.getElementById('bottomQuoteInput').addEventListener('keydown', (e) => {
         handleSingleQuoteEnter(e, addBottomQuote);
+      });
+      document.getElementById('scheduleAddText').addEventListener('keydown', (e) => {
+        handleSingleQuoteEnter(e, addScheduleEntry);
+      });
+      document.getElementById('scheduleModalDate').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.isComposing) {
+          e.preventDefault();
+          confirmScheduleModal();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          closeScheduleModal();
+        }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape' || e.isComposing) return;
+        if (document.getElementById('scheduleConflictModal').classList.contains('active')) {
+          e.preventDefault();
+          closeScheduleConflict();
+        } else if (document.getElementById('scheduleModal').classList.contains('active')) {
+          e.preventDefault();
+          closeScheduleModal();
+        }
       });
     }
 
