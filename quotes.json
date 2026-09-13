@@ -106,7 +106,7 @@
     },
     {
       "id": "q_0of8kf5",
-      "text": "This is happening right now"
+      "text": "This is happening now"
     },
     {
       "id": "q_1a3b0oo",
@@ -141,10 +141,6 @@
       "text": "Be aware of your breath"
     },
     {
-      "id": "q_151u3s6",
-      "text": "Here and now"
-    },
-    {
       "id": "q_00042be",
       "text": "Life is but a moment in space"
     },
@@ -165,16 +161,8 @@
       "text": "Stop thinking for a second, and just breathe"
     },
     {
-      "id": "q_08iecp2",
-      "text": "It's always now"
-    },
-    {
       "id": "q_00iz2gy",
       "text": "Notice life breathing around you"
-    },
-    {
-      "id": "q_06kx075",
-      "text": "Everything is fine"
     },
     {
       "id": "q_0y9ymsl",
@@ -183,10 +171,6 @@
     {
       "id": "q_1qcjaza",
       "text": "Let’s see what happens"
-    },
-    {
-      "id": "q_00mzge7",
-      "text": "Be here right now"
     },
     {
       "id": "q_0fbe4a4",
@@ -205,14 +189,6 @@
       "text": "Trust your own process"
     },
     {
-      "id": "q_09wiawo",
-      "text": "Just breathe"
-    },
-    {
-      "id": "q_161s7z1",
-      "text": "Everything is happening right now"
-    },
-    {
       "id": "q_zzzz0bocmf",
       "text": "Everything happens momentarily"
     },
@@ -226,7 +202,7 @@
     },
     {
       "id": "q_zzzz00b9q9",
-      "text": "It’s always the same moment"
+      "text": "It’s the same moment"
     },
     {
       "id": "q_zzzz03qjw3",
@@ -234,7 +210,23 @@
     },
     {
       "id": "q_zzzz00feh4",
-      "text": "It’s always here"
+      "text": "This is here"
+    },
+    {
+      "id": "q_zzzz002r86",
+      "text": "No matter what happens"
+    },
+    {
+      "id": "q_zzzz002444",
+      "text": "There's no time"
+    },
+    {
+      "id": "q_zzzz004rrc",
+      "text": "Where are you?"
+    },
+    {
+      "id": "q_zzzz0002yx",
+      "text": "This is now"
     }
   ]
 }
