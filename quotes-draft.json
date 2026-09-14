@@ -1,10 +1,14 @@
 {
-  "updatedAt": "2026-09-14T09:06:35.381Z",
-  "baseFileSha": "e31592dc6d1c729506c18679cf7ccef32ef24648",
+  "updatedAt": "2026-09-14T09:36:38.573Z",
+  "baseFileSha": "fa093fffd4aa24934ddb6cb4a145cc02b5f2ba82",
   "quotes": [
     {
       "id": "q_zzzz000000",
       "text": "Notice your nose.\nWhat else is being filtered out?"
+    },
+    {
+      "id": "q_zzzz000002",
+      "text": "Now you’re reading, now you’re not"
     }
   ]
 }
