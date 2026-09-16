@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-16T12:27:23.993Z",
+  "updatedAt": "2026-09-16T13:38:56.129Z",
   "baseFileSha": "2fd69f7dc6036f32c897abb6a6a8873917288291",
   "quotes": [
     {
@@ -41,6 +41,10 @@
     {
       "id": "q_zzzz000gww",
       "text": "Now"
+    },
+    {
+      "id": "q_zzzz00encv",
+      "text": "Learn to see through hate"
     }
   ]
 }
