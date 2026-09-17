@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-17T07:30:06.655Z",
+  "updatedAt": "2026-09-17T14:29:26.069Z",
   "baseFileSha": "f16c545f4aaa78783a3362202052fdd6c2a53dfe",
   "quotes": [
     {
@@ -57,6 +57,10 @@
     {
       "id": "q_zzzz001mus",
       "text": "You're not alone"
+    },
+    {
+      "id": "q_zzzz0033lc",
+      "text": "Everything is here"
     }
   ]
 }
