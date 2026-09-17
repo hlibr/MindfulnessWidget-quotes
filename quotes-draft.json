@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-17T14:57:08.437Z",
+  "updatedAt": "2026-09-17T17:08:49.042Z",
   "baseFileSha": "f16c545f4aaa78783a3362202052fdd6c2a53dfe",
   "quotes": [
     {
@@ -61,6 +61,10 @@
     {
       "id": "q_zzzz0033lc",
       "text": "Everything is here"
+    },
+    {
+      "id": "q_zzzz0058k5",
+      "text": "You are here now"
     }
   ]
 }
