@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-09-16T14:31:32.898Z",
-  "baseFileSha": "2fd69f7dc6036f32c897abb6a6a8873917288291",
+  "updatedAt": "2026-09-17T07:30:06.655Z",
+  "baseFileSha": "f16c545f4aaa78783a3362202052fdd6c2a53dfe",
   "quotes": [
     {
       "id": "q_zzzz000000",
@@ -53,6 +53,10 @@
     {
       "id": "q_zzzz001u9h",
       "text": "This is right now"
+    },
+    {
+      "id": "q_zzzz001mus",
+      "text": "You're not alone"
     }
   ]
 }
