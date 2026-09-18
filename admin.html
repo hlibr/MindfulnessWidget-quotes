@@ -882,6 +882,34 @@
       min-width: 0;
     }
 
+    .cycle-hint {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin: 0 0 12px 0;
+    }
+
+    .timeline-boundary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 12px 0 2px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--success);
+    }
+
+    .timeline-boundary::before,
+    .timeline-boundary::after {
+      content: '';
+      height: 1px;
+      flex: 1;
+      background: rgba(74, 222, 128, 0.4);
+    }
+
+    .timeline-list > .timeline-boundary:first-child {
+      margin-top: 0;
+    }
+
     /* Bruteforce Modal */
     .bruteforce-result {
       background: var(--bg);
@@ -1021,6 +1049,7 @@
       <!-- Quote Timeline -->
       <div class="timeline-section">
         <h3>📅 Quote Timeline <span id="monthInfo" style="font-weight: normal; color: var(--text-dim);"></span></h3>
+        <p class="cycle-hint">🔀 marks the first day of a new shuffle (cycle <span id="cycleInfo"></span>). Each shuffle shows every quote once.</p>
         <div id="timelineList" class="timeline-list"></div>
         <div class="timeline-nav">
           <button class="btn-secondary btn-small" onclick="prevMonth()">◀ Prev Month</button>
@@ -2655,8 +2684,14 @@
       if (quotes.length === 0) {
         document.getElementById('timelineList').innerHTML = '<div style="color: var(--text-dim); text-align: center;">No quotes</div>';
         document.getElementById('monthInfo').textContent = '';
+        const cycleInfoEmpty = document.getElementById('cycleInfo');
+        if (cycleInfoEmpty) cycleInfoEmpty.textContent = '';
         return;
       }
+
+      const scheduled = getScheduledQuotes();
+      const total = scheduled.length;
+      const seed = computeSourceSeed(scheduled.map(q => q.id));
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -2669,6 +2704,20 @@
       const isCurrentMonth = displayMonth.getFullYear() === today.getFullYear() &&
         displayMonth.getMonth() === today.getMonth();
       document.getElementById('monthInfo').textContent = isCurrentMonth ? '(This Month)' : `(${monthLabel})`;
+
+      // Shuffle cycle range visible in this month (rotation slots ignore
+      // schedule/rerolls — the boundary is a property of the shuffle itself).
+      if (total > 2) {
+        const firstSerial = getDaySerial(new Date(displayMonth.getFullYear(), displayMonth.getMonth(), 1));
+        const lastSerial = getDaySerial(new Date(displayMonth.getFullYear(), displayMonth.getMonth() + 1, 0));
+        const firstCycle = Math.floor(firstSerial / total);
+        const lastCycle = Math.floor(lastSerial / total);
+        const cycleInfo = document.getElementById('cycleInfo');
+        if (cycleInfo) cycleInfo.textContent = firstCycle === lastCycle ? `#${firstCycle + 1}` : `#${firstCycle + 1}–#${lastCycle + 1}`;
+      } else {
+        const cycleInfo = document.getElementById('cycleInfo');
+        if (cycleInfo) cycleInfo.textContent = total === 2 ? '(alternating pair)' : '';
+      }
 
       const items = [];
 
@@ -2685,8 +2734,22 @@
         prevText = resolveDisplayForPreview(seedDay, null, 0).text;
       }
 
+      // Whether this date starts a new shuffle: daySerial is a multiple of
+      // the pool size (cycleNumber increments), so the day shows the first
+      // slot of a freshly shuffled ordering. Not meaningful for pools of 1–2
+      // (single quote / alternating pair — no full shuffle).
+      const isCycleStart = (date) => total > 2 && getDaySerial(date) % total === 0;
+      const cycleNumberFor = (date) => Math.floor(getDaySerial(date) / total) + 1;
+
       for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(year, month, day);
+
+        // Shuffle boundary marker — first day of a freshly shuffled cycle.
+        if (isCycleStart(date)) {
+          items.push(`
+            <div class="timeline-boundary" title="New shuffle: each quote appears once per cycle">🔀 New shuffle · cycle #${cycleNumberFor(date)}</div>
+          `);
+        }
 
         // Reroll Logic
         const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
