@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-19T08:44:10.913Z",
+  "updatedAt": "2026-09-19T11:18:55.409Z",
   "baseFileSha": "c25c645d8d5589aa1eb921561199f58e6aa705d1",
   "quotes": [
     {
@@ -77,6 +77,10 @@
     {
       "id": "q_zzzz00267i",
       "text": "Lucidity comes from stillness"
+    },
+    {
+      "id": "q_zzzz002uez",
+      "text": "Ride the moment"
     }
   ]
 }
