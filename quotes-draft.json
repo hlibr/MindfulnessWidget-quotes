@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-19T15:51:04.833Z",
+  "updatedAt": "2026-09-20T09:21:22.701Z",
   "baseFileSha": "c25c645d8d5589aa1eb921561199f58e6aa705d1",
   "quotes": [
     {
@@ -85,6 +85,10 @@
     {
       "id": "q_zzzz00002q",
       "text": "Let the wind decide"
+    },
+    {
+      "id": "q_zzzz000hvm",
+      "text": "Do or don’t - it’s fine"
     }
   ]
 }
