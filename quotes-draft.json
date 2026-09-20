@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-20T10:31:02.581Z",
+  "updatedAt": "2026-09-20T10:36:14.822Z",
   "baseFileSha": "c79b7e4a295d63c15c0b647cce94142e18772664",
   "quotes": [
     {
@@ -109,6 +109,10 @@
     {
       "id": "q_zzzz0005e6",
       "text": "Nothing is unchanging"
+    },
+    {
+      "id": "q_zzzz0004oj",
+      "text": "Where are you coming from?"
     }
   ]
 }
