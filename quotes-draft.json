@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-20T10:29:42.073Z",
+  "updatedAt": "2026-09-20T10:31:02.581Z",
   "baseFileSha": "c79b7e4a295d63c15c0b647cce94142e18772664",
   "quotes": [
     {
@@ -105,6 +105,10 @@
     {
       "id": "q_zzzz000bsr",
       "text": "Respect your own pain"
+    },
+    {
+      "id": "q_zzzz0005e6",
+      "text": "Nothing is unchanging"
     }
   ]
 }
