@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-20T14:00:18.356Z",
+  "updatedAt": "2026-09-20T14:02:14.883Z",
   "baseFileSha": "c79b7e4a295d63c15c0b647cce94142e18772664",
   "quotes": [
     {
@@ -117,6 +117,10 @@
     {
       "id": "q_zzzz00a2rj",
       "text": "Be here"
+    },
+    {
+      "id": "q_zzzz0002n7",
+      "text": "It’s always happening now"
     }
   ]
 }
