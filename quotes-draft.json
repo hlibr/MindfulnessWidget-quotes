@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-09-21T11:12:52.539Z",
-  "baseFileSha": "b1f91f6782afcb5a6b5031288577e0439c53fd36",
+  "updatedAt": "2026-09-21T11:25:02.575Z",
+  "baseFileSha": "f99b275a87ebe3a1c5d56057c37e485e5df18c3c",
   "quotes": [
     {
       "id": "q_zzzz000000",
@@ -133,6 +133,10 @@
     {
       "id": "q_zzzz000621",
       "text": "We're all here"
+    },
+    {
+      "id": "q_zzzz001y45",
+      "text": "We’re here"
     }
   ]
 }
