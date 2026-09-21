@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-21T06:15:36.456Z",
+  "updatedAt": "2026-09-21T08:30:03.972Z",
   "baseFileSha": "b1f91f6782afcb5a6b5031288577e0439c53fd36",
   "quotes": [
     {
@@ -125,6 +125,10 @@
     {
       "id": "q_zzzz009kct",
       "text": "We all come from nowhere, and to nowhere we go"
+    },
+    {
+      "id": "q_zzzz000156",
+      "text": "You matter"
     }
   ]
 }
