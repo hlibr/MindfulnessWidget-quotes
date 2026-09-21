@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-09-21T12:26:12.326Z",
-  "baseFileSha": "a997e46ef2595a4d9640e270f12c3e1a9633ebc8",
+  "updatedAt": "2026-09-21T14:13:47.240Z",
+  "baseFileSha": "3b1b6c395e0ababe5ad34f500cb9dfa5090effa6",
   "quotes": [
     {
       "id": "q_zzzz000000",
@@ -141,6 +141,10 @@
     {
       "id": "q_zzzz001536",
       "text": "How does it feel?"
+    },
+    {
+      "id": "q_zzzz005lhb",
+      "text": "It's always here"
     }
   ]
 }
