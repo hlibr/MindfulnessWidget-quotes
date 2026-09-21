@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-09-20T14:02:14.883Z",
-  "baseFileSha": "c79b7e4a295d63c15c0b647cce94142e18772664",
+  "updatedAt": "2026-09-21T06:15:36.456Z",
+  "baseFileSha": "b1f91f6782afcb5a6b5031288577e0439c53fd36",
   "quotes": [
     {
       "id": "q_zzzz000000",
@@ -121,6 +121,10 @@
     {
       "id": "q_zzzz0002n7",
       "text": "It’s always happening now"
+    },
+    {
+      "id": "q_zzzz009kct",
+      "text": "We all come from nowhere, and to nowhere we go"
     }
   ]
 }
