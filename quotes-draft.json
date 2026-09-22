@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-22T09:55:02.670Z",
+  "updatedAt": "2026-09-22T10:05:15.202Z",
   "baseFileSha": "8bef8b90065baf252e267c4af1aa98bee808b4fc",
   "quotes": [
     {
@@ -9,6 +9,10 @@
     {
       "id": "q_zzzz000001",
       "text": "Accept it and move on"
+    },
+    {
+      "id": "q_zzzz000005",
+      "text": "Compartmentalize your life"
     }
   ]
 }
