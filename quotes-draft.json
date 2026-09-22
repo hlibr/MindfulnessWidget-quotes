@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-09-22T20:24:55.126Z",
-  "baseFileSha": "5a3dc94a53ea8500af4a4b8cbe6bf48f57608e48",
+  "updatedAt": "2026-09-22T20:25:17.201Z",
+  "baseFileSha": "28d68571c8cc3daceb95551e0f7df12b243549c0",
   "quotes": [
     {
       "id": "q_zzzz000000",
@@ -45,10 +45,6 @@
     {
       "id": "q_zzzz000194",
       "text": "Let it happen"
-    },
-    {
-      "id": "q_zzzz0004jk",
-      "text": "Let go into the flow"
     }
   ]
 }
