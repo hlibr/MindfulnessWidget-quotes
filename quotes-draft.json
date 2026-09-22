@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-22T10:42:41.849Z",
+  "updatedAt": "2026-09-22T11:34:11.393Z",
   "baseFileSha": "8bef8b90065baf252e267c4af1aa98bee808b4fc",
   "quotes": [
     {
@@ -17,6 +17,10 @@
     {
       "id": "q_zzzz00001s",
       "text": "You are here"
+    },
+    {
+      "id": "q_zzzz00000p",
+      "text": "Everything that exists - exists right now"
     }
   ]
 }
