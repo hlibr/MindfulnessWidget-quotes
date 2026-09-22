@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-22T10:05:15.202Z",
+  "updatedAt": "2026-09-22T10:42:41.849Z",
   "baseFileSha": "8bef8b90065baf252e267c4af1aa98bee808b4fc",
   "quotes": [
     {
@@ -13,6 +13,10 @@
     {
       "id": "q_zzzz000005",
       "text": "Compartmentalize your life"
+    },
+    {
+      "id": "q_zzzz00001s",
+      "text": "You are here"
     }
   ]
 }
