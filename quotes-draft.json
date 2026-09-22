@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-09-22T11:34:11.393Z",
-  "baseFileSha": "8bef8b90065baf252e267c4af1aa98bee808b4fc",
+  "updatedAt": "2026-09-22T11:39:40.168Z",
+  "baseFileSha": "5a3dc94a53ea8500af4a4b8cbe6bf48f57608e48",
   "quotes": [
     {
       "id": "q_zzzz000000",
@@ -21,6 +21,10 @@
     {
       "id": "q_zzzz00000p",
       "text": "Everything that exists - exists right now"
+    },
+    {
+      "id": "q_zzzz000086",
+      "text": "We're all watching the same dream"
     }
   ]
 }
