@@ -2136,16 +2136,13 @@
     function renderQuotes() {
       quoteCount.textContent = `(${quotes.length})`;
 
-      // Highlight what the app actually shows today. Rotation days use the
-      // exact slot index (as before); scheduled days match by text so a
-      // free-text scheduled quote highlights nothing instead of the wrong
-      // item (and a pool-duplicate schedule highlights its wording).
+      // Highlight what the app actually shows today. `shown.index` is the
+      // rotation slot in ID-sorted order, NOT the file-order position, so
+      // it must be mapped back via todayListIndex() (stable ID match).
+      // Comparing the sorted slot directly against the file-order row is
+      // what made the banner and the highlight disagree.
       const shown = quotes.length ? resolveTodayDisplay() : null;
-      const todayMatchIndex = !shown
-        ? -1
-        : shown.scheduled
-          ? quotes.findIndex(q => q.text === shown.text)
-          : shown.index;
+      const todayMatchIndex = todayListIndex(shown);
 
       quoteList.innerHTML = quotes.map((quote, i) => `
         <div class="quote-item ${i === todayMatchIndex ? 'today' : ''}" data-index="${i}" draggable="true">
@@ -2193,6 +2190,10 @@
 
     /**
      * Compute quotes for the next N days from a given quote list.
+     * Rotation-only baseline for stability scoring (matches the worker's
+     * baseline, which also ignores the schedule overlay/no-repeat).
+     * Window starts TOMORROW: today is already served and can't change, so
+     * scoring must measure tomorrow onward like the single-quote search.
      * Returns array of { date, quote } objects.
      */
     function computeDaysAhead(quoteList, numDays) {
@@ -2204,7 +2205,7 @@
 
       for (let i = 0; i < numDays; i++) {
         const date = new Date(today);
-        date.setDate(date.getDate() + i);
+        date.setDate(date.getDate() + i + 1);
         const index = getQuoteIndexForDate(date, scheduled.length, 0, sourceSeed);
         // Local YYYY-MM-DD (NOT toISOString; that would be UTC).
         const dateStr = date.getFullYear() + '-' +
@@ -2624,9 +2625,13 @@
       const scheduled = getScheduledQuotes();
       const shown = resolveTodayDisplay();
       todayQuote.textContent = shown.text;
+      const listIdx = todayListIndex(shown);
+      const listPart = listIdx >= 0
+        ? `Quote #${listIdx + 1} of ${scheduled.length}`
+        : `Not in quote list (${scheduled.length} quotes)`;
       todayMeta.textContent = shown.scheduled
-        ? `📌 Scheduled for today · rotation slot #${shown.index + 1} of ${scheduled.length}`
-        : `Schedule slot #${shown.index + 1} of ${scheduled.length}`;
+        ? `📌 Scheduled for today · ${listPart} · rotation slot #${shown.index + 1} of ${scheduled.length}`
+        : `${listPart} · rotation slot #${shown.index + 1} of ${scheduled.length}`;
 
       // Also update timeline
       renderTimeline();
@@ -2635,7 +2640,8 @@
     // Today's displayed quote, resolved exactly like the app: sequential
     // resolve over [today-2, today-1, today] so the no-repeat fallback in
     // the preview matches (scheduled text equal to yesterday's shown text
-    // falls back to rotation).
+    // falls back to rotation). Honors simulated rerolls so the banner
+    // matches the timeline TODAY row after ↻.
     function resolveTodayDisplay() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -2643,22 +2649,26 @@
       for (let back = 2; back >= 1; back--) {
         const d = new Date(today);
         d.setDate(d.getDate() - back);
-        prev = resolveDisplayForPreview(d, prev, 0).text;
+        prev = resolveDisplayForPreview(d, prev, rerollCounts[localDateStr(d)] || 0).text;
       }
-      return resolveDisplayForPreview(today, prev, 0);
+      return resolveDisplayForPreview(today, prev, rerollCounts[localDateStr(today)] || 0);
     }
 
     // Preview resolver mirroring the app: base pick honors the schedule,
     // rerolls ignore it, and a scheduled text equal to the previous day's
     // shown text falls back to rotation (the app's no-repeat rule).
+    // `index` is the rotation slot in ID-sorted order (the algorithm's
+    // space); `id` identifies the pool quote shown on rotation days
+    // (null for scheduled free text) so callers can map back to file order.
     function resolveDisplayForPreview(date, prevText, rerollCount) {
       const scheduled = getScheduledQuotes();
       const total = scheduled.length;
+      if (total <= 0) return { text: '', scheduled: false, index: 0, id: null };
       const seed = computeSourceSeed(scheduled.map(q => q.id));
       const dateStr = localDateStr(date);
       const schedMap = getScheduleMap();
       if ((rerollCount || 0) <= 0 && schedMap[dateStr] && schedMap[dateStr] !== prevText) {
-        return { text: schedMap[dateStr], scheduled: true, index: getQuoteIndexForDate(date, total, 0, seed) };
+        return { text: schedMap[dateStr], scheduled: true, index: getQuoteIndexForDate(date, total, 0, seed), id: null };
       }
       let index = getQuoteIndexForDate(date, total, rerollCount || 0, seed);
       // Text-level no-repeat (mirrors the app): yesterday may have been a
@@ -2674,7 +2684,19 @@
           }
         }
       }
-      return { text: scheduled[index].text, scheduled: false, index };
+      return { text: scheduled[index].text, scheduled: false, index, id: scheduled[index].id };
+    }
+
+    // File-order position of today's quote in `quotes` (the rendered list).
+    // Single source of truth for both the highlight and the banner meta, so
+    // they can never disagree. Rotation days match by stable ID (correct
+    // with duplicate wording); scheduled free text matches by wording and
+    // yields -1 when it isn't in the pool.
+    function todayListIndex(shown) {
+      if (!shown) return -1;
+      if (shown.scheduled) return quotes.findIndex(q => q.text === shown.text);
+      if (shown.id == null) return -1;
+      return quotes.findIndex(q => q.id === shown.id);
     }
 
     // ================== Month-by-Month Timeline ==================
@@ -2691,7 +2713,6 @@
 
       const scheduled = getScheduledQuotes();
       const total = scheduled.length;
-      const seed = computeSourceSeed(scheduled.map(q => q.id));
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -2726,12 +2747,15 @@
       const month = displayMonth.getMonth();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-      // Seed prev with the day before the month so the no-repeat fallback
-      // on the 1st matches the app.
+      // Seed prev with a 2-day warmup before the month so the no-repeat
+      // fallback on the 1st matches the app (single-day seeding with null
+      // prev can pick a different day-0 quote and cascade the error through
+      // the whole month). Honors simulated rerolls like the day loop.
       let prevText = null;
-      {
-        const seedDay = new Date(year, month, 0);
-        prevText = resolveDisplayForPreview(seedDay, null, 0).text;
+      for (let back = 2; back >= 1; back--) {
+        const seedDay = new Date(year, month, 1);
+        seedDay.setDate(seedDay.getDate() - back);
+        prevText = resolveDisplayForPreview(seedDay, prevText, rerollCounts[localDateStr(seedDay)] || 0).text;
       }
 
       // Whether this date starts a new shuffle: daySerial is a multiple of
@@ -2755,10 +2779,15 @@
         const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const rerollCount = rerollCounts[dateKey] || 0;
 
-        const shown = resolveDisplayForPreview(date, prevText, rerollCount);
+        const isToday = date.getTime() === today.getTime();
+        // TODAY must equal the banner by construction: same resolver, same
+        // inputs (including simulated rerolls). The month walk can drift
+        // from resolveTodayDisplay()'s 2-day chain, so override it here.
+        const shown = isToday
+          ? resolveTodayDisplay()
+          : resolveDisplayForPreview(date, prevText, rerollCount);
         prevText = shown.text;
 
-        const isToday = date.getTime() === today.getTime();
         const dayDiff = Math.round((date - today) / (24 * 60 * 60 * 1000));
 
         const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -2801,38 +2830,54 @@
       document.getElementById('timelineList').innerHTML = items.join('');
     }
 
+    // Displayed text for a date with the same sequential (prev-chain)
+    // semantics the timeline uses: warms up from 7 days before so the
+    // no-repeat fallback stabilizes, honoring simulated rerolls on the way.
+    // Returns { prev, current } where prev is yesterday's shown text.
+    function displayedChainForDate(date, dateKey) {
+      let prev = null;
+      for (let back = 7; back >= 1; back--) {
+        const d = new Date(date);
+        d.setDate(d.getDate() - back);
+        prev = resolveDisplayForPreview(d, prev, rerollCounts[localDateStr(d)] || 0).text;
+      }
+      const currentCount = rerollCounts[dateKey] || 0;
+      return { prev, current: resolveDisplayForPreview(date, prev, currentCount) };
+    }
+
     function simulateReroll(dateKey) {
       const [y, m, d] = dateKey.split('-').map(Number);
       const date = new Date(y, m - 1, d);
 
-      const currentCount = rerollCounts[dateKey] || 0;
-      const scheduled = getScheduledQuotes();
-      const seed = computeSourceSeed(scheduled.map(q => q.id));
-      // Current visible text: scheduled quote on the base pick, else rotation.
-      // Rerolls always resolve from rotation (like the app), skipping any
-      // candidate whose text matches what's currently shown.
-      const schedMap = getScheduleMap();
-      const currentText = (currentCount <= 0 && schedMap[dateKey])
-        ? schedMap[dateKey]
-        : scheduled[getQuoteIndexForDate(date, scheduled.length, currentCount, seed)].text;
+      // Current visible text via the full resolver (schedule + no-repeat
+      // fallback + rerolls). The old shortcut read the raw rotation slot
+      // and missed the schedule overlay and the no-repeat fallback, so ↻
+      // compared against the wrong text. Rerolls always resolve from
+      // rotation (like the app), skipping candidates matching what's shown.
+      const { prev, current } = displayedChainForDate(date, dateKey);
+      const currentText = current.text;
 
-      let newCount = currentCount + 1;
+      let newCount = (rerollCounts[dateKey] || 0) + 1;
       let attempts = 0;
       while (attempts < 10) {
-        const idx = getQuoteIndexForDate(date, scheduled.length, newCount, seed);
-        if (scheduled[idx].text !== currentText) break;
+        if (resolveDisplayForPreview(date, prev, newCount).text !== currentText) break;
         newCount++;
         attempts++;
       }
 
       rerollCounts[dateKey] = newCount;
-      renderTimeline();
+      // Timeline-only refresh left the banner + highlight stale (a ↻ on
+      // TODAY changed the timeline row but not "TODAY'S QUOTE"). Both read
+      // the same resolver state now, so refresh both.
+      renderQuotes();
+      updateTodayQuote();
     }
 
     function clearReroll(dateKey) {
       if (rerollCounts[dateKey]) {
         delete rerollCounts[dateKey];
-        renderTimeline();
+        renderQuotes();
+        updateTodayQuote();
       }
     }
 
