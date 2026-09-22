@@ -1,10 +1,14 @@
 {
-  "updatedAt": "2026-09-22T08:57:40.418Z",
-  "baseFileSha": "3e40e6daee80fbaa0a55dc940a22b0fbd4a1971b",
+  "updatedAt": "2026-09-22T09:55:02.670Z",
+  "baseFileSha": "8bef8b90065baf252e267c4af1aa98bee808b4fc",
   "quotes": [
     {
       "id": "q_zzzz000000",
       "text": "This is happening now"
+    },
+    {
+      "id": "q_zzzz000001",
+      "text": "Accept it and move on"
     }
   ]
 }
