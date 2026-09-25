@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-25T03:05:28.352Z",
+  "updatedAt": "2026-09-25T19:18:18.655Z",
   "baseFileSha": "d0d76855f3c98d3b56f6553b569b467c0ad26452",
   "quotes": [
     {
@@ -29,6 +29,10 @@
     {
       "id": "q_zzzz00002q",
       "text": "This is happening right now"
+    },
+    {
+      "id": "q_zzzz000ptb",
+      "text": "You are alive"
     }
   ]
 }
