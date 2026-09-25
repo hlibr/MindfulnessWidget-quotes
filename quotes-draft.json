@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-25T03:03:56.056Z",
+  "updatedAt": "2026-09-25T03:04:20.871Z",
   "baseFileSha": "d0d76855f3c98d3b56f6553b569b467c0ad26452",
   "quotes": [
     {
@@ -17,6 +17,10 @@
     {
       "id": "q_zzzz0000vm",
       "text": "This is a moment in your life"
+    },
+    {
+      "id": "q_zzzz0000ag",
+      "text": "The rest of your life starts now"
     }
   ]
 }
