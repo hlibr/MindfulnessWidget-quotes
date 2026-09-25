@@ -1,10 +1,14 @@
 {
-  "updatedAt": "2026-09-23T13:57:22.436Z",
-  "baseFileSha": "28d68571c8cc3daceb95551e0f7df12b243549c0",
+  "updatedAt": "2026-09-25T03:02:35.905Z",
+  "baseFileSha": "d0d76855f3c98d3b56f6553b569b467c0ad26452",
   "quotes": [
     {
       "id": "q_zzzz000000",
       "text": "It’s always now"
+    },
+    {
+      "id": "q_zzzz000006",
+      "text": "When you’re not looking actively - what can be seen?"
     }
   ]
 }
