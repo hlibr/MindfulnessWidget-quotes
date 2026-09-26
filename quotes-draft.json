@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-26T17:14:23.440Z",
+  "updatedAt": "2026-09-26T17:16:40.548Z",
   "baseFileSha": "5d75265a2c3045b62d00b8fef617e4a72b9d4524",
   "quotes": [
     {
@@ -265,6 +265,10 @@
     {
       "id": "q_zzzz0004br",
       "text": "Why are you here?"
+    },
+    {
+      "id": "q_zzzz0008sl",
+      "text": "There's no time, and there's no rush"
     }
   ]
 }
