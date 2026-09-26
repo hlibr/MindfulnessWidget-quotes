@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-09-26T10:10:10.654Z",
-  "baseFileSha": "1263229813913926330213e2e223e040599f971e",
+  "updatedAt": "2026-09-26T10:11:32.806Z",
+  "baseFileSha": "d88aac961e1510cd4e004cb6fef3b8d6944fe0ca",
   "quotes": [
     {
       "id": "q_0of8kf5",
@@ -225,6 +225,10 @@
     {
       "id": "q_zzzz0001h1",
       "text": "This is your life"
+    },
+    {
+      "id": "q_zzzz002pxj",
+      "text": "Focus on your breath"
     }
   ]
 }
