@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-26T17:27:53.089Z",
+  "updatedAt": "2026-09-26T17:35:33.709Z",
   "baseFileSha": "5d75265a2c3045b62d00b8fef617e4a72b9d4524",
   "quotes": [
     {
@@ -273,6 +273,10 @@
     {
       "id": "q_zzzz00058b",
       "text": "Step by step"
+    },
+    {
+      "id": "q_zzzz0001an",
+      "text": "Know yourself, and you will have a purpose. Have a purpose - and you will have the means."
     }
   ]
 }
