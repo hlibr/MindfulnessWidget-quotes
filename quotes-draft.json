@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-26T14:18:59.655Z",
+  "updatedAt": "2026-09-26T14:24:17.254Z",
   "baseFileSha": "186052f11019c1eca5fb719116f70eaac93dbf0e",
   "quotes": [
     {
@@ -233,6 +233,10 @@
     {
       "id": "q_zzzz0024yc",
       "text": "Be right here"
+    },
+    {
+      "id": "q_zzzz000om4",
+      "text": "You’re always here"
     }
   ]
 }
