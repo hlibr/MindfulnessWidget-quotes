@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-26T17:07:06.359Z",
+  "updatedAt": "2026-09-26T17:10:58.567Z",
   "baseFileSha": "5d75265a2c3045b62d00b8fef617e4a72b9d4524",
   "quotes": [
     {
@@ -257,6 +257,10 @@
     {
       "id": "q_zzzz000n2x",
       "text": "Your life is happening right now"
+    },
+    {
+      "id": "q_zzzz001hgw",
+      "text": "Don't push — let it happen"
     }
   ]
 }
