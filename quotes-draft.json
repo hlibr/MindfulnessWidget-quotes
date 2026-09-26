@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-26T14:02:09.488Z",
+  "updatedAt": "2026-09-26T14:13:44.027Z",
   "baseFileSha": "186052f11019c1eca5fb719116f70eaac93dbf0e",
   "quotes": [
     {
@@ -229,6 +229,10 @@
     {
       "id": "q_zzzz003xkk",
       "text": "How did you get here?"
+    },
+    {
+      "id": "q_zzzz005n8a",
+      "text": "Firmly establish yourself in the present"
     }
   ]
 }
