@@ -1,0 +1,45 @@
+# Promote quotes-draft.json to quotes.json (live) on a schedule.
+# The widget reads quotes.json via the GitHub API, so pushing to main makes
+# the new quotes live immediately (the Pages workflow ignores quotes.json).
+
+name: Promote draft quotes to live
+
+on:
+  schedule:
+    # Oct 22 — 15:00 UTC (GitHub Actions cron is always UTC)
+    - cron: '0 15 22 10 *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run: validate only, no write/commit. Check this for a test run.'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: promote-draft
+  cancel-in-progress: false
+
+env:
+  # One-shot guard: a scheduled run on any other date exits without changes.
+  EXPECTED_RUN_DATE: '2026-10-22'
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Promote draft quotes
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == true }}
+        run: |
+          ARGS=""
+          if [ "$DRY_RUN" = "true" ]; then
+            ARGS="--dry-run"
+          fi
+          python3 promote_draft.py --only-date "$EXPECTED_RUN_DATE" $ARGS
