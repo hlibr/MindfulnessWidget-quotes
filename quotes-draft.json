@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-28T14:02:03.783Z",
+  "updatedAt": "2026-09-28T14:29:14.754Z",
   "baseFileSha": "ed7aceecd899c0af3783489d92f858af6cf733ce",
   "quotes": [
     {
@@ -341,6 +341,14 @@
     {
       "id": "q_zzzz0004w1",
       "text": "Nothing to do, really.\nUnless you want to"
+    },
+    {
+      "id": "q_zzzz000402",
+      "text": "What do you see when you don’t focus on anything?"
+    },
+    {
+      "id": "q_zzzz0006pz",
+      "text": "In your own time is fine"
     }
   ]
 }
