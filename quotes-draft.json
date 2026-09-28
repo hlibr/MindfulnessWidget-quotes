@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-09-28T14:41:03.883Z",
-  "baseFileSha": "ed7aceecd899c0af3783489d92f858af6cf733ce",
+  "updatedAt": "2026-09-28T14:52:10.223Z",
+  "baseFileSha": "b442310b5c8e37deb43061ebc5efad991ac7cc1b",
   "quotes": [
     {
       "id": "q_0of8kf5",
@@ -345,6 +345,10 @@
     {
       "id": "q_zzzz0006pz",
       "text": "In your own time is fine"
+    },
+    {
+      "id": "q_zzzz00080o",
+      "text": "Happiness comes from fulfillment. Fulfillment is internal."
     }
   ]
 }
