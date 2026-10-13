@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-13T10:29:00.719Z",
+  "updatedAt": "2026-10-13T10:30:21.825Z",
   "baseFileSha": "7d4f83ffa4b39f454c8dc55293431aed1b6b0424",
   "quotes": [
     {
@@ -321,6 +321,10 @@
     {
       "id": "q_zzzz008xti",
       "text": "Trust yourself"
+    },
+    {
+      "id": "q_zzzz0006at",
+      "text": "Let go into the flow"
     }
   ]
 }
