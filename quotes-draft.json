@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-13T11:35:17.517Z",
+  "updatedAt": "2026-10-13T11:39:10.895Z",
   "baseFileSha": "7d4f83ffa4b39f454c8dc55293431aed1b6b0424",
   "quotes": [
     {
@@ -313,6 +313,10 @@
     {
       "id": "q_zzzz0004q5",
       "text": "Be here"
+    },
+    {
+      "id": "q_zzzz0007kr",
+      "text": "The story of your life is being told"
     }
   ]
 }
