@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-10-12T23:55:17.482Z",
-  "baseFileSha": "d364a5d38709e7ab508946c673f2c8034287e44a",
+  "updatedAt": "2026-10-13T09:07:50.291Z",
+  "baseFileSha": "7d4f83ffa4b39f454c8dc55293431aed1b6b0424",
   "quotes": [
     {
       "id": "q_zzzz000000",
@@ -9,6 +9,14 @@
     {
       "id": "q_zzzz000009",
       "text": "This is a moment in your life"
+    },
+    {
+      "id": "q_zzzz000007",
+      "text": "It’s only now"
+    },
+    {
+      "id": "q_zzzz00004j",
+      "text": "It’s only here"
     }
   ]
 }
