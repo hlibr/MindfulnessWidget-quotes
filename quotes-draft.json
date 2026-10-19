@@ -1,18 +1,10 @@
 {
-  "updatedAt": "2026-10-17T08:15:40.173Z",
+  "updatedAt": "2026-10-19T13:20:29.453Z",
   "baseFileSha": "159fcc49fe6196d8ba5c140a54baf292fed0df89",
   "quotes": [
     {
       "id": "q_zzzz000000",
       "text": "This is happening right now"
-    },
-    {
-      "id": "q_zzzz000003",
-      "text": "This is a moment in your life"
-    },
-    {
-      "id": "q_zzzz000002",
-      "text": "Remember that you're making memories right now"
     }
   ]
 }
