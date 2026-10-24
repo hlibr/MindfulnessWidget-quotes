@@ -134,7 +134,7 @@
     },
     {
       "id": "q_0xw9b40",
-      "text": "Isn't this a single stream?"
+      "text": "Isn't your life a single stream?"
     },
     {
       "id": "q_0tkexp0",
@@ -158,23 +158,15 @@
     },
     {
       "id": "q_zzzz0018e3",
-      "text": "Time is just the rail we ride"
+      "text": "Time is just the rail we ride on"
     },
     {
       "id": "q_zzzz002vfa",
       "text": "It's neither here nor there"
     },
     {
-      "id": "q_zzzz0000xp",
-      "text": "What's outside your bubble?"
-    },
-    {
       "id": "q_zzzz0001h1",
       "text": "This is your life"
-    },
-    {
-      "id": "q_zzzz002pxj",
-      "text": "Focus on your breath"
     },
     {
       "id": "q_zzzz005n8a",
@@ -185,32 +177,12 @@
       "text": "Life can be anything"
     },
     {
-      "id": "q_zzzz000k3r",
-      "text": "You are tuned in to this world - that's the illusion of life"
-    },
-    {
       "id": "q_zzzz00039l",
       "text": "Wherever life leads"
     },
     {
       "id": "q_zzzz0004br",
       "text": "Why are you here?"
-    },
-    {
-      "id": "q_zzzz0008sl",
-      "text": "There's no time, and there's no rush"
-    },
-    {
-      "id": "q_zzzz00058b",
-      "text": "Step by step"
-    },
-    {
-      "id": "q_zzzz0001an",
-      "text": "Know yourself, and you will have a purpose.\nHave a purpose - and you will have the means."
-    },
-    {
-      "id": "q_zzzz0004gw",
-      "text": "Whatever you decide is best"
     },
     {
       "id": "q_zzzz00059v",
@@ -221,10 +193,6 @@
       "text": "You're just a balloon animal filled with life"
     },
     {
-      "id": "q_zzzz000898",
-      "text": "You were born for this"
-    },
-    {
       "id": "q_zzzz00113i",
       "text": "When life gets hard - take it easy"
     },
@@ -233,24 +201,12 @@
       "text": "You’re on your way"
     },
     {
-      "id": "q_zzzz008ic7",
-      "text": "Where’s your focal point?"
-    },
-    {
       "id": "q_zzzz00075u",
       "text": "It just is"
     },
     {
       "id": "q_zzzz0004w1",
       "text": "Nothing to do, really.\nUnless you want to"
-    },
-    {
-      "id": "q_zzzz0006pz",
-      "text": "In your own time is fine"
-    },
-    {
-      "id": "q_zzzz00080o",
-      "text": "Happiness comes from fulfillment.\nFulfillment is internal."
     },
     {
       "id": "q_zzzz001i6r",
@@ -265,20 +221,8 @@
       "text": "The rest of your life starts now"
     },
     {
-      "id": "q_zzzz004686",
-      "text": "Be with the flow"
-    },
-    {
       "id": "q_zzzz00lcdt",
       "text": "The moment is here"
-    },
-    {
-      "id": "q_zzzz000mhi",
-      "text": "Follow your breath"
-    },
-    {
-      "id": "q_zzzz0009ig",
-      "text": "Keep your focus"
     },
     {
       "id": "q_zzzz0000jh",
@@ -287,10 +231,6 @@
     {
       "id": "q_zzzz0001r6",
       "text": "Let it flow"
-    },
-    {
-      "id": "q_zzzz0000mu",
-      "text": "You are here"
     },
     {
       "id": "q_zzzz00ca19",
@@ -315,6 +255,10 @@
     {
       "id": "q_zzzz0007kr",
       "text": "The story of your life is being told"
+    },
+    {
+      "id": "q_zzzz010peo",
+      "text": "Everything is fine"
     }
   ]
 }
