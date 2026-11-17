@@ -38,7 +38,7 @@
     },
     {
       "id": "q_1kgp7je",
-      "text": "Your life led to this moment"
+      "text": "Your life has led to this moment"
     },
     {
       "id": "q_0ur5on3",
@@ -125,10 +125,6 @@
       "text": "Just observe what happens"
     },
     {
-      "id": "q_1qcjaza",
-      "text": "Let’s see what happens"
-    },
-    {
       "id": "q_0fbe4a4",
       "text": "Truly it does/doesn’t matter"
     },
@@ -177,16 +173,8 @@
       "text": "Life can be anything"
     },
     {
-      "id": "q_zzzz00039l",
-      "text": "Wherever life leads"
-    },
-    {
       "id": "q_zzzz0004br",
       "text": "Why are you here?"
-    },
-    {
-      "id": "q_zzzz00059v",
-      "text": "Stillness brings lucidity,\nUnbotheredness brings freedom"
     },
     {
       "id": "q_zzzz000ba9",
@@ -201,16 +189,8 @@
       "text": "You’re on your way"
     },
     {
-      "id": "q_zzzz00075u",
-      "text": "It just is"
-    },
-    {
       "id": "q_zzzz0004w1",
       "text": "Nothing to do, really.\nUnless you want to"
-    },
-    {
-      "id": "q_zzzz001i6r",
-      "text": "It comes together in the end"
     },
     {
       "id": "q_zzzz002xwb",
@@ -259,6 +239,18 @@
     {
       "id": "q_zzzz010peo",
       "text": "Everything is fine"
+    },
+    {
+      "id": "q_zzzz001byz",
+      "text": "Everything is here"
+    },
+    {
+      "id": "q_zzzz0001wx",
+      "text": "Everything is now"
+    },
+    {
+      "id": "q_zzzz0094mn",
+      "text": "Just be"
     }
   ]
 }
