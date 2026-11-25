@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-24T13:34:28.240Z",
+  "updatedAt": "2026-11-25T09:00:01.597Z",
   "baseFileSha": "9205cceef000557ccac7ddad550af9adb0846def",
   "quotes": [
     {
@@ -269,6 +269,10 @@
     {
       "id": "q_zzzz00091g",
       "text": "It's now"
+    },
+    {
+      "id": "q_zzzz0000il",
+      "text": "It just is"
     }
   ]
 }
